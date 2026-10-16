@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "creation": "2026-10-14 22:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-14 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra IA",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "IA Conversacion",
+ "autoname": "hash",
+ "title_field": "titulo",
+ "description": "Una conversación con el asistente de Lyra. Cada usuario ve solo las suyas.",
+ "fields": [
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Usuario",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "mensajes",
+   "fieldtype": "Long Text",
+   "label": "Mensajes (JSON)",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "delete": 1,
+   "report": 1
+  }
+ ],
+ "field_order": [
+  "titulo",
+  "usuario",
+  "mensajes"
+ ]
+}

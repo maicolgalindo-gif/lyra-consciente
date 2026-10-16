@@ -1,0 +1,134 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"ia_hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lyra IA</b></span>\", \"col\": 12}}, {\"id\": \"ia_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Asistente\", \"col\": 3}}, {\"id\": \"ia_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Clasificaciones\", \"col\": 3}}, {\"id\": \"ia_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Uso y costo\", \"col\": 3}}, {\"id\": \"ia_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Ajustes de IA\", \"col\": 3}}, {\"id\": \"ia_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ia_card\", \"type\": \"card\", \"data\": {\"card_name\": \"Inteligencia artificial\", \"col\": 6}}]",
+ "creation": "2026-10-14 22:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "star",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Lyra IA",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Inteligencia artificial",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Asistente",
+   "link_count": 0,
+   "link_to": "asistente-ia",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Clasificaciones",
+   "link_count": 0,
+   "link_to": "IA Clasificacion",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Conversaciones guardadas",
+   "link_count": 0,
+   "link_to": "IA Conversacion",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Uso y costo",
+   "link_count": 0,
+   "link_to": "IA Registro",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ajustes de IA",
+   "link_count": 0,
+   "link_to": "IA Ajustes",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-14 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra IA",
+ "name": "Lyra IA",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 30.0,
+ "shortcuts": [
+  {
+   "label": "Asistente",
+   "link_to": "asistente-ia",
+   "type": "Page",
+   "color": "Grey",
+   "doc_view": "",
+   "stats_filter": "[]",
+   "format": "",
+   "url": ""
+  },
+  {
+   "label": "Clasificaciones",
+   "link_to": "IA Clasificacion",
+   "type": "DocType",
+   "color": "Grey",
+   "doc_view": "List",
+   "stats_filter": "[]",
+   "format": "",
+   "url": ""
+  },
+  {
+   "label": "Uso y costo",
+   "link_to": "IA Registro",
+   "type": "DocType",
+   "color": "Grey",
+   "doc_view": "List",
+   "stats_filter": "[]",
+   "format": "",
+   "url": ""
+  },
+  {
+   "label": "Ajustes de IA",
+   "link_to": "IA Ajustes",
+   "type": "DocType",
+   "color": "Grey",
+   "doc_view": "",
+   "stats_filter": "[]",
+   "format": "",
+   "url": ""
+  }
+ ],
+ "title": "Lyra IA"
+}

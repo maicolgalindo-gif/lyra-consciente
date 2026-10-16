@@ -1,0 +1,175 @@
+{
+ "actions": [],
+ "creation": "2026-10-14 21:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-14 21:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra IA",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "IA Ajustes",
+ "fields": [
+  {
+   "fieldname": "activo",
+   "fieldtype": "Check",
+   "label": "Activar la IA en Lyra",
+   "default": "0"
+  },
+  {
+   "fieldname": "seccion_proveedor",
+   "fieldtype": "Section Break",
+   "label": "Proveedor"
+  },
+  {
+   "fieldname": "proveedor",
+   "fieldtype": "Select",
+   "label": "Proveedor",
+   "options": "DeepSeek\nOpenRouter\nTogether\nOtro compatible con OpenAI",
+   "default": "DeepSeek",
+   "description": "La API oficial de DeepSeek guarda los datos en China. OpenRouter y Together sirven el mismo modelo desde EE. UU."
+  },
+  {
+   "fieldname": "url_base",
+   "fieldtype": "Data",
+   "label": "URL de la API",
+   "default": "https://api.deepseek.com",
+   "description": "Se llena sola al elegir el proveedor."
+  },
+  {
+   "fieldname": "clave",
+   "fieldtype": "Password",
+   "label": "Clave de la API",
+   "length": 512
+  },
+  {
+   "fieldname": "column_break_p",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "modelo_chat",
+   "fieldtype": "Data",
+   "label": "Modelo para conversar y actuar",
+   "default": "deepseek-chat"
+  },
+  {
+   "fieldname": "modelo_razonador",
+   "fieldtype": "Data",
+   "label": "Modelo para analizar (opcional)",
+   "default": "deepseek-reasoner",
+   "description": "Más lento y caro; para análisis difíciles. Vacío: usa el de conversar."
+  },
+  {
+   "fieldname": "estado_conexion",
+   "fieldtype": "Small Text",
+   "label": "Última prueba de conexión",
+   "read_only": 1
+  },
+  {
+   "fieldname": "seccion_costo",
+   "fieldtype": "Section Break",
+   "label": "Costo y límites"
+  },
+  {
+   "fieldname": "precio_entrada",
+   "fieldtype": "Float",
+   "label": "Precio por millón de tokens de entrada (USD)",
+   "precision": "4",
+   "description": "Tómalo de la página de precios de tu proveedor. Sirve para calcular el costo y el límite mensual."
+  },
+  {
+   "fieldname": "precio_salida",
+   "fieldtype": "Float",
+   "label": "Precio por millón de tokens de salida (USD)",
+   "precision": "4"
+  },
+  {
+   "fieldname": "column_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "limite_mensual",
+   "fieldtype": "Currency",
+   "label": "Límite de gasto mensual (USD)",
+   "options": "USD",
+   "description": "Al llegar, la IA se pausa hasta el mes siguiente. 0 = sin límite."
+  },
+  {
+   "fieldname": "gasto_mes",
+   "fieldtype": "HTML",
+   "label": "Gasto del mes"
+  },
+  {
+   "fieldname": "seccion_privacidad",
+   "fieldtype": "Section Break",
+   "label": "Privacidad"
+  },
+  {
+   "fieldname": "ocultar_datos",
+   "fieldtype": "Check",
+   "label": "Ocultar correos, cédulas y teléfonos antes de enviarlos",
+   "default": "1",
+   "description": "El modelo ve [CORREO_1], [DOCUMENTO_1]… y Lyra los vuelve a poner en la respuesta."
+  },
+  {
+   "fieldname": "guardar_textos",
+   "fieldtype": "Check",
+   "label": "Guardar en el registro lo que se envió y lo que respondió",
+   "default": "1",
+   "description": "Útil para revisar y mejorar. Se borra solo a los 90 días (Log Settings)."
+  },
+  {
+   "fieldname": "seccion_negocio",
+   "fieldtype": "Section Break",
+   "label": "Lo que la IA debe saber del negocio"
+  },
+  {
+   "fieldname": "contexto_negocio",
+   "fieldtype": "Long Text",
+   "label": "Contexto del negocio",
+   "description": "Qué venden, horarios, precios, requisitos, políticas y el tono para hablar con los clientes. La IA lo usa al sugerir respuestas."
+  }
+ ],
+ "field_order": [
+  "activo",
+  "seccion_proveedor",
+  "proveedor",
+  "url_base",
+  "clave",
+  "column_break_p",
+  "modelo_chat",
+  "modelo_razonador",
+  "estado_conexion",
+  "seccion_costo",
+  "precio_entrada",
+  "precio_salida",
+  "column_break_c",
+  "limite_mensual",
+  "gasto_mes",
+  "seccion_privacidad",
+  "ocultar_datos",
+  "guardar_textos",
+  "seccion_negocio",
+  "contexto_negocio"
+ ],
+ "issingle": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "description": "Configuración de la inteligencia artificial de Lyra."
+}

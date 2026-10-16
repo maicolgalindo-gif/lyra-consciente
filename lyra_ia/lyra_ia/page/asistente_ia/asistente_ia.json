@@ -1,0 +1,39 @@
+{
+ "content": null,
+ "creation": "2026-10-14 22:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "icon": "",
+ "idx": 0,
+ "modified": "2026-10-14 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra IA",
+ "name": "asistente-ia",
+ "owner": "Administrator",
+ "page_name": "asistente-ia",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Administrador de WhatsApp"
+  },
+  {
+   "role": "Agente de WhatsApp"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Asistente Lyra"
+}

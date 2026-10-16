@@ -1,0 +1,139 @@
+{
+ "actions": [],
+ "creation": "2026-10-14 21:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-14 21:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra IA",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "IA Clasificacion",
+ "fields": [
+  {
+   "fieldname": "modulo",
+   "fieldtype": "Data",
+   "label": "Módulo",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "conjunto",
+   "fieldtype": "Data",
+   "label": "Conjunto de preguntas",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "pregunta",
+   "fieldtype": "Data",
+   "label": "Pregunta",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "referencia_doctype",
+   "fieldtype": "Link",
+   "options": "DocType",
+   "label": "Documento"
+  },
+  {
+   "fieldname": "referencia_name",
+   "fieldtype": "Dynamic Link",
+   "options": "referencia_doctype",
+   "label": "Referencia"
+  },
+  {
+   "fieldname": "motor",
+   "fieldtype": "Select",
+   "label": "Quién respondió",
+   "options": "DeepSeek\nLaya\nPersona",
+   "default": "DeepSeek"
+  },
+  {
+   "fieldname": "seccion_respuesta",
+   "fieldtype": "Section Break",
+   "label": "Respuesta"
+  },
+  {
+   "fieldname": "respuesta_ia",
+   "fieldtype": "Data",
+   "label": "Respuesta de la IA",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "confianza",
+   "fieldtype": "Percent",
+   "label": "Confianza"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "respuesta_final",
+   "fieldtype": "Data",
+   "label": "Respuesta final",
+   "in_list_view": 1,
+   "description": "La que quedó después de que una persona la revisó."
+  },
+  {
+   "fieldname": "corregida",
+   "fieldtype": "Check",
+   "label": "Una persona la corrigió",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "revisada_por",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Revisada por"
+  },
+  {
+   "fieldname": "seccion_texto",
+   "fieldtype": "Section Break",
+   "label": "Lo que se clasificó",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "texto",
+   "fieldtype": "Long Text",
+   "label": "Texto"
+  }
+ ],
+ "field_order": [
+  "modulo",
+  "conjunto",
+  "pregunta",
+  "column_break_1",
+  "referencia_doctype",
+  "referencia_name",
+  "motor",
+  "seccion_respuesta",
+  "respuesta_ia",
+  "confianza",
+  "column_break_2",
+  "respuesta_final",
+  "corregida",
+  "revisada_por",
+  "seccion_texto",
+  "texto"
+ ],
+ "autoname": "hash",
+ "in_create": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "description": "Clasificaciones de la IA y sus correcciones: los ejemplos para entrenar a Laya."
+}

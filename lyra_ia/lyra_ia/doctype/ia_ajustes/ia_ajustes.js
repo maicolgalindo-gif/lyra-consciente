@@ -1,0 +1,39 @@
+// IA Ajustes: proveedor, probar la conexion y gasto del mes.
+const PROVEEDORES_IA = {
+	DeepSeek: { url: "https://api.deepseek.com", chat: "deepseek-chat", razonador: "deepseek-reasoner" },
+	OpenRouter: { url: "https://openrouter.ai/api/v1", chat: "deepseek/deepseek-chat", razonador: "deepseek/deepseek-r1" },
+	Together: { url: "https://api.together.xyz/v1", chat: "deepseek-ai/DeepSeek-V3", razonador: "deepseek-ai/DeepSeek-R1" },
+};
+
+frappe.ui.form.on("IA Ajustes", {
+	refresh(frm) {
+		frm.add_custom_button("Probar conexión", async () => {
+			if (frm.is_dirty()) await frm.save();
+			const r = await frappe.call({ method: "lyra_ia.cerebro.probar_conexion", type: "POST", freeze: true, freeze_message: "Probando…" });
+			const m = r.message || {};
+			frappe.msgprint({ title: m.ok ? "Conexión correcta" : "No se pudo conectar", message: frappe.utils.escape_html(m.estado || ""),
+				indicator: m.ok ? "green" : "red" });
+			frm.reload_doc();
+		});
+		frm.add_custom_button("Ir al asistente", () => frappe.set_route("asistente-ia"));
+		frappe.call({ method: "lyra_ia.cerebro.resumen_gasto" }).then((r) => {
+			const g = r.message || {};
+			const usd = (v) => `USD ${Number(v || 0).toFixed(4)}`;
+			frm.fields_dict.gasto_mes.$wrapper.html(`
+				<div class="text-muted small" style="line-height:1.7">
+					Este mes: <b>${g.llamadas || 0}</b> usos${g.errores ? ` (${g.errores} con error)` : ""} ·
+					${(g.tokens_entrada || 0).toLocaleString("es-CO")} tokens de entrada y ${(g.tokens_salida || 0).toLocaleString("es-CO")} de salida<br>
+					${g.con_precios ? `Costo: <b>${usd(g.costo)}</b>${g.limite ? ` de ${usd(g.limite)}` : ""}`
+						: "Pon los precios del proveedor para ver el costo y usar el límite mensual."}
+				</div>`);
+		});
+	},
+	proveedor(frm) {
+		const p = PROVEEDORES_IA[frm.doc.proveedor];
+		if (!p) return;
+		frm.set_value("url_base", p.url);
+		frm.set_value("modelo_chat", p.chat);
+		frm.set_value("modelo_razonador", p.razonador);
+		frappe.show_alert({ message: "Revisa que el nombre del modelo coincida con el de tu cuenta en el proveedor.", indicator: "blue" });
+	},
+});
