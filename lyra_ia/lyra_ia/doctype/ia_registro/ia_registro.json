@@ -140,7 +140,7 @@
  "in_create": 1,
  "permissions": [
   {
-   "role": "System Manager",
+   "role": "Equipo Lyra",
    "read": 1,
    "report": 1
   }

@@ -1,0 +1,119 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-19 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Sense",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Sense Ajustes",
+ "fields": [
+  {
+   "fieldname": "activo",
+   "fieldtype": "Check",
+   "label": "Activar «Lyra se da cuenta»",
+   "default": "1",
+   "description": "Lyra mira en segundo plano lo que se crea y se guarda, aplica las reglas y arma las métricas por área."
+  },
+  {
+   "fieldname": "max_avisos_hora",
+   "fieldtype": "Int",
+   "label": "Máximo de avisos por persona en una hora",
+   "default": "6",
+   "description": "Para que Lyra ayude sin volverse molesta."
+  },
+  {
+   "fieldname": "min_personas_area",
+   "fieldtype": "Int",
+   "label": "Mínimo de personas para mostrar un área",
+   "default": "3",
+   "description": "Un área más pequeña se suma a «Otras áreas»: con 1 o 2 personas, las cifras dirían quién fue."
+  },
+  {
+   "fieldname": "sec_reporte",
+   "fieldtype": "Section Break",
+   "label": "Reporte semanal al dueño"
+  },
+  {
+   "fieldname": "reporte_activo",
+   "fieldtype": "Check",
+   "label": "Enviar el reporte semanal",
+   "default": "0"
+  },
+  {
+   "fieldname": "reporte_dia",
+   "fieldtype": "Select",
+   "label": "Día",
+   "options": "Lunes\nMartes\nMiércoles\nJueves\nViernes\nSábado\nDomingo",
+   "default": "Lunes"
+  },
+  {
+   "fieldname": "reporte_hora",
+   "fieldtype": "Int",
+   "label": "Hora (0 a 23)",
+   "default": "7"
+  },
+  {
+   "fieldname": "column_break_r",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reporte_correos",
+   "fieldtype": "Small Text",
+   "label": "Correos",
+   "description": "Separados por coma."
+  },
+  {
+   "fieldname": "reporte_waha",
+   "fieldtype": "Data",
+   "label": "WhatsApp por WAHA (opcional)",
+   "description": "Celular del dueño. Solo si el módulo WAHA está instalado."
+  },
+  {
+   "fieldname": "redactar_con_ia",
+   "fieldtype": "Check",
+   "label": "Que la IA redacte el reporte",
+   "default": "1",
+   "description": "Las cifras siempre salen de los datos; la IA solo las pone en palabras. Sin IA activa, sale un resumen simple."
+  },
+  {
+   "fieldname": "ultimo_reporte",
+   "fieldtype": "Date",
+   "label": "Último reporte enviado",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "activo",
+  "max_avisos_hora",
+  "min_personas_area",
+  "sec_reporte",
+  "reporte_activo",
+  "reporte_dia",
+  "reporte_hora",
+  "column_break_r",
+  "reporte_correos",
+  "reporte_waha",
+  "redactar_con_ia",
+  "ultimo_reporte"
+ ],
+ "issingle": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "export": 1
+  }
+ ],
+ "description": "Ajustes de Lyra se da cuenta (Lyra Sense)."
+}

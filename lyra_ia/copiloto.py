@@ -6,7 +6,8 @@ conversacion con las mismas funciones que usa la pantalla, asi que respeta
 los permisos de quien lo usa (un agente que no puede ver un chat, tampoco
 puede pedirle a la IA que lo resuma).
 
-canal: "meta" (id = numero) o "waha" (id = chat_id).
+canal: "meta" (id = numero, app lyra_whatsapp) o "waha" (id = chat_id, app lyra_waha).
+Son modulos independientes: cada canal funciona solo si su app esta instalada.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ MAX_MENSAJES = 60
 # ------------------------------------------------------------ preguntas
 def preguntas_whatsapp() -> dict:
 	"""Lo que se le pregunta a cada chat. Mismo formato que Laya."""
-	if "lyra_whatsapp" not in frappe.get_installed_apps():
+	if not {"lyra_whatsapp", "lyra_waha"} & set(frappe.get_installed_apps()):
 		return {}
 	return {
 		"whatsapp": {
@@ -67,15 +68,18 @@ ETIQUETAS = {"precio": "cotización", "agendar": "agendar", "compra": "venta", "
 
 # ------------------------------------------------------------- lectura
 def _chat(canal: str, ident: str) -> dict:
-	if "lyra_whatsapp" not in frappe.get_installed_apps():
-		raise IAError(_("El módulo de WhatsApp no está instalado."))
+	instaladas = frappe.get_installed_apps()
+	if canal == "meta" and "lyra_whatsapp" not in instaladas:
+		raise IAError(_("El módulo de WhatsApp oficial no está instalado."))
+	if canal == "waha" and "lyra_waha" not in instaladas:
+		raise IAError(_("El módulo de WAHA no está instalado."))
 	if canal == "meta":
 		from lyra_whatsapp.conversaciones.api import mensajes
 
 		datos = mensajes(ident)
 		datos["referencia"] = ("WhatsApp Conversacion", datos["numero"]) if frappe.db.exists("WhatsApp Conversacion", datos["numero"]) else None
 	elif canal == "waha":
-		from lyra_whatsapp.waha_chat import mensajes
+		from lyra_waha.waha_chat import mensajes
 
 		datos = mensajes(ident)
 		datos["referencia"] = ("WAHA Chat", ident) if frappe.db.exists("WAHA Chat", ident) else None
@@ -102,12 +106,15 @@ def _transcripcion(datos: dict, con_notas: bool) -> str:
 
 
 def _empresa() -> str:
-	return frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company") or ""
+	from lyra_ia.entorno import empresa
+
+	return empresa()
 
 
 def _contexto_negocio() -> str:
-	ctx = (cerebro.ajustes().contexto_negocio or "").strip()
-	return f"\n\nLo que sabes del negocio:\n{ctx}" if ctx else ""
+	from lyra_ia import alma
+
+	return alma.contexto_para_ia()
 
 
 # ------------------------------------------------------------ acciones
@@ -171,7 +178,7 @@ def guardar_clasificacion(canal: str, ident: str, revisadas: str | dict, etiquet
 	clasificador.revisar(frappe.parse_json(revisadas) if isinstance(revisadas, str) else revisadas)
 	if etiquetas is not None:
 		if canal == "waha":
-			from lyra_whatsapp.waha_crm import poner_etiquetas
+			from lyra_waha.waha_crm import poner_etiquetas
 		else:
 			from lyra_whatsapp.conversaciones.notas import poner_etiquetas
 

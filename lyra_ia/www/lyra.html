@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>Lyra conoce tu empresa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
+<style>
+:root {
+	--porcelana: #f3f5f8;
+	--tinta: #1b2a4a;
+	--ultramar: #2f45d6;
+	--niebla: #a9b4c8;
+	--ambar: #e8a33d;
+	--tinta-suave: #4a5878;
+	--blanco: #ffffff;
+	--fuente: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+	background: var(--porcelana);
+	color: var(--tinta);
+	font-family: var(--fuente);
+	font-size: 17px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	overflow: hidden;
+}
+a { color: var(--ultramar); }
+:focus-visible { outline: 2px solid var(--ultramar); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- marco ---------- */
+.escena {
+	height: 100vh;
+	display: grid;
+	grid-template-columns: minmax(340px, 5fr) 7fr;
+	grid-template-rows: auto 1fr auto;
+}
+.barra {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 22px 40px 0;
+	font-size: 15px;
+	color: var(--tinta-suave);
+}
+.marca { font-weight: 600; font-size: 19px; color: var(--tinta); letter-spacing: -0.01em; }
+.barra .acciones { display: flex; gap: 22px; align-items: center; }
+.barra button, .barra a {
+	background: none; border: 0; padding: 0; color: var(--tinta-suave); font: inherit; cursor: pointer; text-decoration: none;
+}
+.barra button:hover, .barra a:hover { color: var(--tinta); }
+.barra button[aria-pressed="true"] { color: var(--ultramar); }
+
+/* ---------- la voz de Lyra (izquierda) ---------- */
+.voz {
+	grid-row: 2;
+	display: flex;
+	flex-direction: column;
+	justify-content: safe center;
+	padding: 24px 40px 24px 72px;
+	max-width: 660px;
+	min-height: 0;
+	overflow-y: auto;
+}
+.voz > * { flex-shrink: 0; }
+.final .pregunta, .fin .pregunta { font-size: clamp(28px, 2.6vw, 38px); min-height: 0; margin-bottom: 28px; }
+/* La cara de Lyra: un thinking orb (thinking-orbs, MIT, Jakub Antalik), en los
+   colores de Lyra. Cambia de estado segun el momento de la entrevista. */
+.orbe { width: 76px; height: 76px; margin: 0 0 24px -10px; display: block; }
+
+.pregunta {
+	font-size: clamp(30px, 3.3vw, 46px);
+	font-weight: 300;
+	line-height: 1.16;
+	letter-spacing: -0.022em;
+	margin: 0 0 36px;
+	min-height: 3.5em;
+	font-variation-settings: "opsz" 96;
+}
+.contexto { color: var(--tinta-suave); font-size: 17px; margin: -20px 0 30px; max-width: 46ch; }
+
+.respuesta { position: relative; }
+.respuesta textarea {
+	width: 100%;
+	resize: none;
+	border: 0;
+	border-bottom: 1.5px solid var(--niebla);
+	background: transparent;
+	font: inherit;
+	font-size: 22px;
+	font-weight: 400;
+	color: var(--tinta);
+	padding: 6px 104px 12px 0;
+	min-height: 52px;
+	max-height: 180px;
+	line-height: 1.35;
+	transition: border-color .2s;
+}
+.respuesta textarea:focus { outline: none; border-bottom-color: var(--ultramar); }
+.respuesta textarea::placeholder { color: var(--niebla); }
+.respuesta .botones { position: absolute; right: 0; bottom: 12px; display: flex; gap: 6px; }
+.btn-icono {
+	width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--niebla); background: var(--blanco);
+	color: var(--tinta); display: grid; place-items: center; cursor: pointer; transition: border-color .2s, background .2s;
+}
+.btn-icono:hover { border-color: var(--ultramar); }
+.btn-icono.enviar { background: var(--ultramar); border-color: var(--ultramar); color: var(--blanco); }
+.btn-icono.enviar:disabled { background: var(--niebla); border-color: var(--niebla); cursor: default; }
+.btn-icono.mic.activo { background: var(--ultramar); color: var(--blanco); border-color: var(--ultramar); }
+.btn-icono svg { width: 19px; height: 19px; }
+
+.sugerencias { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; min-height: 38px; }
+.sugerencias button {
+	font: inherit; font-size: 15px; color: var(--tinta); background: var(--blanco);
+	border: 1px solid #dfe4ec; border-radius: 999px; padding: 7px 15px; cursor: pointer;
+	transition: border-color .15s, color .15s;
+}
+.sugerencias button:hover { border-color: var(--ultramar); color: var(--ultramar); }
+.ayuda { margin-top: 22px; font-size: 14px; color: var(--niebla); }
+
+/* ---------- el holograma (derecha) ---------- */
+.lienzo { grid-row: 2; position: relative; }
+.lienzo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.lienzo .pista { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 13px; color: var(--niebla); pointer-events: none; }
+.solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.viajera {
+	position: fixed; z-index: 10; pointer-events: none; font-size: 20px; color: var(--ultramar);
+	max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	transition: transform .9s cubic-bezier(.6,0,.2,1), opacity .9s ease, font-size .9s;
+}
+
+/* ---------- avance ---------- */
+.avance {
+	grid-column: 1 / -1; display: flex; gap: 6px; padding: 0 40px 26px 72px; align-items: center;
+}
+.avance .latido { width: 8px; height: 8px; border-radius: 50%; background: var(--ultramar); animation: latir 2.4s ease-in-out infinite; }
+@keyframes latir { 50% { opacity: .35; transform: scale(.7); } }
+.avance span { margin-left: 6px; font-size: 14px; color: var(--tinta-suave); }
+
+/* ---------- revision final ---------- */
+.revision { display: none; }
+.final .revision { display: block; }
+.final .respuesta, .final .sugerencias, .final .ayuda { display: none; }
+.grupo { margin-bottom: 16px; }
+.grupo h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--tinta-suave); }
+.grupo .datos { display: flex; flex-wrap: wrap; gap: 6px; }
+.dato {
+	display: inline-flex; align-items: center; gap: 6px; background: var(--blanco); border: 1px solid #dfe4ec;
+	border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 15px;
+}
+.dato.dolor { border-color: #f1d3a3; }
+.dato button { border: 0; background: none; color: var(--niebla); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; }
+.dato button:hover { color: var(--tinta); }
+.agregar { border: 1px dashed var(--niebla); background: none; border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 15px; color: var(--tinta-suave); width: 150px; }
+.agregar:focus { outline: none; border-color: var(--ultramar); border-style: solid; }
+.confirmar {
+	margin-top: 22px; font: inherit; font-size: 17px; font-weight: 500; color: var(--blanco); background: var(--ultramar);
+	border: 0; border-radius: 999px; padding: 13px 28px; cursor: pointer;
+}
+.secundario { margin-left: 14px; background: none; border: 0; font: inherit; color: var(--tinta-suave); cursor: pointer; }
+.fin .respuesta, .fin .sugerencias, .fin .ayuda, .fin .revision { display: none; }
+.final .grupo { padding-bottom: 12px; border-bottom: 1px solid #e3e8f0; }
+
+/* ---------- el plan que propone Lyra ---------- */
+.plan { display: none; }
+.fin .plan { display: block; }
+/* Cada punto: que va a hacer Lyra y por que (lo que el dueno conto). */
+.punto { display: grid; grid-template-columns: 34px 1fr; gap: 2px 14px; padding: 18px 0; border-top: 1px solid #e3e8f0; }
+.punto:last-of-type { border-bottom: 1px solid #e3e8f0; }
+.punto .marca-punto { width: 26px; height: 26px; border-radius: 50%; background: rgba(47, 69, 214, .1); color: var(--ultramar); display: grid; place-items: center; margin-top: 2px; }
+.punto .marca-punto svg { width: 14px; height: 14px; }
+.punto h3 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.punto .como { grid-column: 2; font-size: 16px; color: var(--tinta); margin: 2px 0 0; }
+.punto .porque { grid-column: 2; font-size: 14.5px; color: var(--tinta-suave); margin: 4px 0 0; }
+.primero { margin: 22px 0 0; font-size: 17px; font-weight: 500; color: var(--ultramar); }
+.acciones-plan { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+.acciones-plan a.confirmar { text-decoration: none; display: inline-block; margin-top: 0; }
+
+.error { color: #b54708; font-size: 15px; margin-top: 12px; min-height: 22px; }
+
+@media (max-width: 900px) {
+	body { overflow: auto; }
+	.escena { grid-template-columns: 1fr; grid-template-rows: auto 38vh auto auto; height: auto; min-height: 100vh; }
+	.barra { padding: 16px 16px 0; }
+	.lienzo { grid-row: 2; }
+	.voz { grid-row: 3; padding: 8px 16px 24px; }
+	.avance { grid-row: 4; padding: 0 16px 24px; }
+	.pregunta { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="escena" id="escena">
+	<header class="barra">
+		<div class="marca">Lyra</div>
+		<div class="acciones">
+			<button id="voz" aria-pressed="false" title="Que Lyra lea las preguntas en voz alta">Escuchar a Lyra</button>
+			<a href="/app">Ir al ERP</a>
+		</div>
+	</header>
+
+	<main class="voz" id="panel">
+		<canvas class="orbe" id="orbe" width="152" height="152" role="img" aria-label="Lyra"></canvas>
+		<h1 class="pregunta" id="pregunta" aria-live="polite"></h1>
+		<p class="contexto" id="contexto"></p>
+
+		<div class="respuesta">
+			<label for="texto" class="sr" style="position:absolute;left:-9999px">Tu respuesta</label>
+			<textarea id="texto" rows="1" placeholder="Escribe aquí o toca el micrófono"></textarea>
+			<div class="botones">
+				<button class="btn-icono mic" id="mic" title="Responder hablando" aria-label="Responder hablando">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+				</button>
+				<button class="btn-icono enviar" id="enviar" title="Responder" aria-label="Responder" disabled>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+				</button>
+			</div>
+		</div>
+		<div class="sugerencias" id="sugerencias"></div>
+		<p class="ayuda">Enter para responder. Puedes tocar una de las opciones si te sirve.</p>
+		<p class="error" id="error" role="alert"></p>
+
+		<section class="revision" id="revision" aria-label="Revisión del mapa">
+			<div id="grupos"></div>
+			<button class="confirmar" id="confirmar">Confirmar mi empresa</button>
+			<button class="secundario" id="reiniciar">Empezar de nuevo</button>
+		</section>
+		<section class="plan" id="plan" aria-label="Plan que propone Lyra"></section>
+	</main>
+
+	<section class="lienzo" aria-label="Mapa de tu empresa">
+		<canvas id="lienzo" aria-hidden="true"></canvas>
+		<ul id="mapa-texto" class="solo-lector" aria-live="polite"></ul>
+		<p class="pista">Arrastra para girar. Pasa el mouse por un tema para ver lo que me contaste.</p>
+	</section>
+
+	<footer class="avance" id="avance"></footer>
+</div>
+
+<script type="module">
+// El orbe de Lyra con el motor de thinking-orbs (solo geometria; aqui se pinta).
+import { resolvePreset, MODE_FRAMES } from "/assets/lyra_ia/js/vendor/thinking-orbs/engine.es.js";
+
+const canvas = document.getElementById("orbe");
+const ctx = canvas.getContext("2d");
+const LADO = 76, BASE = 64;            // tamaño en pantalla y preset del motor
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+canvas.width = LADO * dpr; canvas.height = LADO * dpr;
+const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TINTA = [47, 69, 214], FONDO = [243, 245, 248];   // ultramar sobre porcelana
+const mezcla = (w, a) => {
+	const k = Math.min(1, Math.max(0, w));
+	const c = TINTA.map((v, i) => Math.round(v + (FONDO[i] - v) * k));
+	return `rgba(${c[0]},${c[1]},${c[2]},${a ?? 1})`;
+};
+let estadoOrbe = "breathing";
+let reloj = 0, ultimo = performance.now();
+
+function pintar(t) {
+	const { mode, speed, opts } = resolvePreset(estadoOrbe, BASE);
+	const f = MODE_FRAMES[mode](BASE, t * speed, opts);
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	const k = (LADO * dpr) / BASE;
+	ctx.setTransform(k, 0, 0, k, 0, 0);
+	for (const l of f.lines || []) {
+		ctx.strokeStyle = mezcla(l.white, l.a); ctx.lineWidth = l.w;
+		ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+	}
+	for (const d of f.dots) {
+		ctx.fillStyle = mezcla(d.white, d.a);
+		ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+	}
+}
+function cuadro(ahora) {
+	reloj += Math.min(0.1, (ahora - ultimo) / 1000);   // sin saltos al volver a la pestaña
+	ultimo = ahora;
+	pintar(reloj);
+	requestAnimationFrame(cuadro);
+}
+window.lyraOrbe = (s) => {
+	estadoOrbe = s;
+	canvas.setAttribute("aria-label", { breathing: "Lyra te escucha", listening: "Lyra te está oyendo",
+		connecting: "Lyra está pensando", shaping: "Lyra arma tu mapa", weaving: "Lyra ya conoce tu empresa" }[s] || "Lyra");
+	if (reducido) pintar(1.5);   // un cuadro fijo, sin animacion
+};
+if (reducido) pintar(1.5); else requestAnimationFrame(cuadro);
+
+// ===========================================================================
+// El holograma de la empresa. En el centro, una esfera de luz que se va
+// llenando a medida que Lyra conoce la empresa (un sexto por tema). Alrededor,
+// los seis temas como satelites en orbitas inclinadas, con sus datos como
+// lunas. Gira sola y se puede arrastrar. Los textos solo aparecen al pasar el
+// mouse por un tema, o un momento despues de que llega un dato nuevo.
+// ===========================================================================
+const lienzo = document.getElementById("lienzo");
+const lc = lienzo.getContext("2d");
+// Sobre el fondo porcelana: la luz es ultramar y el texto, tinta.
+const HIELO = [47, 69, 214], LUZ = [118, 136, 226], AMBAR = [222, 146, 40], BLANCO = [27, 42, 74], SUAVE = [74, 88, 120];
+const FUENTE = getComputedStyle(document.body).fontFamily;
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a))})`;
+const TAU = Math.PI * 2;
+
+// Puntos de la esfera repartidos parejo (espiral de Fibonacci). El orden es al
+// azar para que se enciendan salteados y no por franjas.
+const PUNTOS = (() => {
+	const n = 900, out = [], oro = Math.PI * (3 - Math.sqrt(5));
+	for (let i = 0; i < n; i++) {
+		const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), th = oro * i;
+		out.push({ x: Math.cos(th) * r, y, z: Math.sin(th) * r, orden: Math.random() });
+	}
+	return out;
+})();
+
+// Cada tema con su orbita: inclinacion y giro distintos para que se crucen.
+// Todas giran a la misma velocidad para que los temas no se amontonen.
+const ORBITAS = [
+	{ inc: 0.28, nodo: 0.0 }, { inc: -0.34, nodo: 0.5 }, { inc: 0.4, nodo: 1.0 },
+	{ inc: -0.22, nodo: 1.6 }, { inc: 0.33, nodo: 2.1 }, { inc: -0.42, nodo: 2.6 },
+	{ inc: 0.18, nodo: 3.1 }, { inc: -0.3, nodo: 3.6 },
+];
+const VEL_ORBITA = 0.16;
+
+let W = 0, H = 0, escala = 1, cx = 0, cy = 0, R = 100;
+let modelo = null;
+let t = 0, ultimoMapa = performance.now();
+let giro = 0.6, inclinacion = -0.32, velGiro = 0, velInc = 0, arrastrando = null;
+let llenado = 0;                       // 0..1, se acerca a lo conocido
+const raton = { x: 0, y: 0, dentro: false };
+const satelites = {};                  // posicion en pantalla de cada tema (ultimoMapa cuadro)
+let destacado = null, destacadoHasta = 0;
+const rayos = [];                      // respuestas viajando hacia su tema
+const ondas = [];                      // anillos al llegar un dato
+
+function medir() {
+	const r = lienzo.getBoundingClientRect();
+	W = r.width; H = r.height; escala = Math.min(2, window.devicePixelRatio || 1);
+	lienzo.width = W * escala; lienzo.height = H * escala;
+	cx = W / 2; cy = H / 2 - 6;
+	R = Math.max(64, Math.min(W * 0.17, H * 0.2));
+}
+
+// Rotar (giro en y, inclinacion en x) y proyectar con perspectiva.
+function proyectar(x, y, z) {
+	const cg = Math.cos(giro), sg = Math.sin(giro);
+	let x1 = x * cg + z * sg, z1 = -x * sg + z * cg;
+	const ci = Math.cos(inclinacion), si = Math.sin(inclinacion);
+	const y1 = y * ci - z1 * si, z2 = y * si + z1 * ci;
+	const f = 7 / (7 - z2);
+	return { x: cx + x1 * R * f, y: cy + y1 * R * f, z: z2, f };
+}
+
+// Punto de una orbita: circulo en el plano xz, inclinado y girado.
+function enOrbita(o, ang, radio) {
+	let x = Math.cos(ang) * radio, y = 0, z = Math.sin(ang) * radio;
+	const ci = Math.cos(o.inc), si = Math.sin(o.inc);
+	[y, z] = [y * ci - z * si, y * si + z * ci];
+	const cn = Math.cos(o.nodo), sn = Math.sin(o.nodo);
+	[x, z] = [x * cn + z * sn, -x * sn + z * cn];
+	return [x, y, z];
+}
+
+// En que parte de la conversacion va (sin conteos: no hay un numero fijo de preguntas).
+function faseDe(estado) {
+	const tema = estado.siguiente && estado.siguiente.tema;
+	return tema === "persona" || tema === "acuerdo" ? "Conociéndote" : "Conociendo tu empresa";
+}
+
+function actualizar(estado, nuevos) {
+	const antes = modelo;
+	modelo = {
+		empresa: estado.empresa || "Tu empresa", temas: estado.temas, mapa: estado.mapa,
+		actual: estado.completo ? null : estado.siguiente && estado.siguiente.tema,
+		completo: !!estado.completo || estado.estado === "Confirmado",
+		fase: faseDe(estado),
+	};
+	if (nuevos && antes) {
+		for (const [tema, datos] of Object.entries(nuevos)) {
+			if (!datos || !datos.length) continue;
+			rayos.push({ tema, nacio: t });
+			destacado = tema; destacadoHasta = t + 7;
+		}
+	}
+	if (reducido) dibujar();
+}
+
+// ------------------------------------------------------------- dibujo
+function partir(texto, ancho) {
+	const palabras = String(texto).split(/\s+/), lineas = [];
+	let actual = "";
+	for (const p of palabras) {
+		const prueba = actual ? actual + " " + p : p;
+		if (lc.measureText(prueba).width > ancho && actual) { lineas.push(actual); actual = p; } else actual = prueba;
+	}
+	if (actual) lineas.push(actual);
+	return lineas.slice(0, 3);
+}
+
+function dibujar() {
+	if (!W) return;
+	lc.setTransform(escala, 0, 0, escala, 0, 0);
+	lc.clearRect(0, 0, W, H);
+	if (!modelo) return;
+	const temas = modelo.temas;
+	const listos = temas.filter((x) => x.listo).length;
+	const meta = modelo.completo ? 1 : listos / temas.length;
+	llenado += (meta - llenado) * (reducido ? 1 : 0.03);
+
+	// halo detras de la esfera
+	const halo = lc.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 2.3);
+	halo.addColorStop(0, rgba(LUZ, 0.16 + llenado * 0.12)); halo.addColorStop(0.5, rgba(LUZ, 0.05)); halo.addColorStop(1, rgba(LUZ, 0));
+	lc.fillStyle = halo; lc.beginPath(); lc.arc(cx, cy, R * 2.3, 0, TAU); lc.fill();
+
+	// orbitas (la parte de atras primero, tenue)
+	const sats = temas.map((tema, i) => {
+		const o = ORBITAS[i % ORBITAS.length];
+		const radio = 1.85 + (i % 2) * 0.18;
+		// se descuenta el nodo para que queden repartidos parejo alrededor
+		const ang = i * (TAU / temas.length) + o.nodo + (reducido ? 0 : t * VEL_ORBITA * (modelo.completo ? 0.5 : 1));
+		const p = proyectar(...enOrbita(o, ang, radio));
+		return { tema, o, radio, p, i };
+	});
+	for (const s of sats) {
+		const actual = s.tema.clave === modelo.actual, dolor = s.tema.clave === "dolores";
+		const col = dolor && s.tema.listo ? AMBAR : HIELO;
+		lc.lineWidth = actual ? 1.4 : 1;
+		let prev = null;
+		for (let k = 0; k <= 96; k++) {
+			const q = proyectar(...enOrbita(s.o, (k / 96) * TAU, s.radio));
+			if (prev) {
+				const a = (s.tema.listo ? 0.22 : 0.1) * (q.z > 0 ? 1 : 0.45) + (actual ? 0.25 : 0);
+				lc.strokeStyle = rgba(col, a);
+				lc.beginPath(); lc.moveTo(prev.x, prev.y); lc.lineTo(q.x, q.y); lc.stroke();
+			}
+			prev = q;
+		}
+	}
+
+	// esfera: puntos encendidos segun lo que Lyra conoce, y un barrido de luz
+	const barrido = reducido ? 0.2 : Math.sin(t * 0.7);
+	const pts = PUNTOS.map((p) => ({ ...proyectar(p.x, p.y, p.z), lit: p.orden < llenado, y0: p.y }));
+	pts.sort((a, b) => a.z - b.z);
+	for (const p of pts) {
+		const frente = (p.z + 1) / 2;
+		const cerca = Math.max(0, 1 - Math.abs(p.y0 - barrido) * 6);
+		const a = (p.lit ? 0.35 + frente * 0.65 : 0.08 + frente * 0.18) + cerca * 0.35;
+		lc.fillStyle = rgba(p.lit ? (cerca > 0.4 ? [24, 38, 160] : HIELO) : LUZ, a);
+		const r = (p.lit ? 1.6 : 1.1) * p.f * (0.7 + frente * 0.7);
+		lc.beginPath(); lc.arc(p.x, p.y, r, 0, TAU); lc.fill();
+	}
+	// anillos de latitud, como un holograma
+	for (const lat of [-0.5, 0, 0.5]) {
+		const rr = Math.sqrt(1 - lat * lat);
+		let prev = null;
+		for (let k = 0; k <= 72; k++) {
+			const a = (k / 72) * TAU;
+			const q = proyectar(Math.cos(a) * rr, lat, Math.sin(a) * rr);
+			if (prev) { lc.strokeStyle = rgba(HIELO, q.z > 0 ? 0.16 : 0.05); lc.lineWidth = 1; lc.beginPath(); lc.moveTo(prev.x, prev.y); lc.lineTo(q.x, q.y); lc.stroke(); }
+			prev = q;
+		}
+	}
+	// nucleo
+	const nucleo = lc.createRadialGradient(cx, cy, 0, cx, cy, R * 0.55);
+	nucleo.addColorStop(0, rgba(LUZ, 0.1 + llenado * 0.22)); nucleo.addColorStop(1, rgba(LUZ, 0));
+	lc.fillStyle = nucleo; lc.beginPath(); lc.arc(cx, cy, R * 0.55, 0, TAU); lc.fill();
+
+	// nombre de la empresa, debajo
+	lc.textAlign = "center";
+	lc.font = `600 16px ${FUENTE}`; lc.fillStyle = rgba(BLANCO, 0.95);
+	lc.fillText(modelo.empresa, cx, cy + R * 1.18 + 8);
+	lc.font = `400 13px ${FUENTE}`; lc.fillStyle = rgba(SUAVE, 0.9);
+	lc.fillText(modelo.completo ? "Lyra ya te conoce" : modelo.fase, cx, cy + R * 1.18 + 28);
+
+	// satelites, de atras hacia adelante
+	let cercano = null, dmin = 26;
+	sats.sort((a, b) => a.p.z - b.p.z);
+	for (const s of sats) {
+		const { tema, p } = s;
+		const actual = tema.clave === modelo.actual, dolor = tema.clave === "dolores";
+		const col = dolor && tema.listo ? AMBAR : HIELO;
+		const datos = modelo.mapa[tema.clave] || [];
+		const prof = 0.45 + ((p.z + 2.1) / 4.2) * 0.55;
+		satelites[tema.clave] = { x: p.x, y: p.y };
+		if (raton.dentro && !arrastrando) {
+			const d = Math.hypot(raton.x - p.x, raton.y - p.y);
+			if (d < dmin) { dmin = d; cercano = tema.clave; }
+		}
+		if (tema.listo) {
+			const g = lc.createRadialGradient(p.x, p.y, 0, p.x, p.y, 26 * p.f);
+			g.addColorStop(0, rgba(col, 0.55 * prof)); g.addColorStop(1, rgba(col, 0));
+			lc.fillStyle = g; lc.beginPath(); lc.arc(p.x, p.y, 26 * p.f, 0, TAU); lc.fill();
+			lc.fillStyle = rgba(col, prof); lc.beginPath(); lc.arc(p.x, p.y, 4.5 * p.f, 0, TAU); lc.fill();
+			// lunas: una por dato
+			datos.slice(0, 8).forEach((_, j) => {
+				const a = (reducido ? 0 : t * 1.2) + j * (TAU / Math.min(8, datos.length));
+				const mx = p.x + Math.cos(a) * 13 * p.f, my = p.y + Math.sin(a) * 6 * p.f;
+				lc.fillStyle = rgba(col, prof * 0.9); lc.beginPath(); lc.arc(mx, my, 1.8 * p.f, 0, TAU); lc.fill();
+			});
+		} else {
+			lc.strokeStyle = rgba(HIELO, 0.5 * prof); lc.lineWidth = 1.2;
+			lc.setLineDash([2, 3]); lc.beginPath(); lc.arc(p.x, p.y, 7 * p.f, 0, TAU); lc.stroke(); lc.setLineDash([]);
+		}
+		if (actual) {
+			const pulso = reducido ? 0.5 : (t * 0.9) % 1;
+			lc.strokeStyle = rgba(HIELO, 0.7 * (1 - pulso)); lc.lineWidth = 1.5;
+			lc.beginPath(); lc.arc(p.x, p.y, (9 + pulso * 18) * p.f, 0, TAU); lc.stroke();
+		}
+		lc.font = `${actual ? 600 : 500} 13.5px ${FUENTE}`;
+		// el nombre va hacia afuera, salvo que no quepa en el borde
+		const anchoNombre = lc.measureText(tema.nombre).width + 20;
+		let aDerecha = p.x >= cx;
+		if (aDerecha && p.x + anchoNombre > W - 8) aDerecha = false;
+		if (!aDerecha && p.x - anchoNombre < 8) aDerecha = true;
+		lc.textAlign = aDerecha ? "left" : "right";
+		lc.fillStyle = actual ? rgba(BLANCO, 1) : rgba(dolor && tema.listo ? AMBAR : HIELO, tema.listo ? 0.9 * prof : 0.55 * prof);
+		lc.fillText(tema.nombre, p.x + (aDerecha ? 14 : -14) * p.f, p.y + 4);
+	}
+
+	// respuestas viajando: entran por la izquierda y siguen hasta su tema
+	for (let i = rayos.length - 1; i >= 0; i--) {
+		const r = rayos[i], s = satelites[r.tema];
+		const k = (t - r.nacio) / 1.1;
+		if (!s || k >= 1) {
+			if (s) ondas.push({ x: s.x, y: s.y, nacio: t, dolor: r.tema === "dolores" });
+			rayos.splice(i, 1); continue;
+		}
+		const e = k * k * (3 - 2 * k);
+		const x0 = 0, y0 = H * 0.55;
+		const x = x0 + (s.x - x0) * e, y = y0 + (s.y - y0) * e - Math.sin(e * Math.PI) * 60;
+		for (let c = 0; c < 10; c++) {
+			const kk = Math.max(0, e - c * 0.02);
+			const xx = x0 + (s.x - x0) * kk, yy = y0 + (s.y - y0) * kk - Math.sin(kk * Math.PI) * 60;
+			lc.fillStyle = rgba(HIELO, (1 - c / 10) * 0.8); lc.beginPath(); lc.arc(xx, yy, 3 - c * 0.22, 0, TAU); lc.fill();
+		}
+	}
+	for (let i = ondas.length - 1; i >= 0; i--) {
+		const o = ondas[i], k = (t - o.nacio) / 1.2;
+		if (k >= 1) { ondas.splice(i, 1); continue; }
+		lc.strokeStyle = rgba(o.dolor ? AMBAR : HIELO, 0.8 * (1 - k)); lc.lineWidth = 2 * (1 - k) + 0.5;
+		lc.beginPath(); lc.arc(o.x, o.y, 8 + k * 46, 0, TAU); lc.stroke();
+	}
+
+	// el panel del tema: al pasar el mouse, o un momento despues de un dato nuevo
+	const foco = cercano || (t < destacadoHasta ? destacado : null);
+	lienzo.style.cursor = arrastrando ? "grabbing" : cercano ? "pointer" : "grab";
+	if (foco) panel(foco);
+}
+
+function panel(clave) {
+	const tema = modelo.temas.find((x) => x.clave === clave), s = satelites[clave];
+	if (!tema || !s) return;
+	const datos = (modelo.mapa[clave] || []).slice(0, 5);
+	const dolor = clave === "dolores";
+	const col = dolor ? AMBAR : HIELO;
+	lc.font = `500 13.5px ${FUENTE}`;
+	const filas = datos.length ? datos.map((d) => partir(d, 220)) : [["Todavía no me has contado esto."]];
+	const ancho = Math.min(260, Math.max(150, ...filas.flat().map((l) => lc.measureText(l).width)) + 34);
+	const alto = 38 + filas.reduce((a, f) => a + f.length * 18 + 6, 0);
+	const derecha = s.x < W - ancho - 60;
+	let x = derecha ? s.x + 34 : s.x - 34 - ancho;
+	let y = Math.max(12, Math.min(H - alto - 12, s.y - alto / 2));
+	x = Math.max(12, Math.min(W - ancho - 12, x));
+	// vidrio
+	lc.fillStyle = "rgba(255, 255, 255, 0.96)"; lc.strokeStyle = rgba(col, 0.45); lc.lineWidth = 1;
+	lc.beginPath(); lc.roundRect(x, y, ancho, alto, 12); lc.fill(); lc.stroke();
+	lc.strokeStyle = rgba(col, 0.35);
+	lc.beginPath(); lc.moveTo(s.x, s.y); lc.lineTo(derecha ? x : x + ancho, y + 20); lc.stroke();
+	lc.textAlign = "left";
+	lc.font = `600 13px ${FUENTE}`; lc.fillStyle = rgba(col, 1);
+	lc.fillText(tema.nombre, x + 16, y + 24);
+	lc.font = `500 13.5px ${FUENTE}`;
+	let yy = y + 46;
+	for (const f of filas) {
+		lc.fillStyle = rgba(col, 0.9); lc.beginPath(); lc.arc(x + 19, yy - 4, 2.2, 0, TAU); lc.fill();
+		lc.fillStyle = datos.length ? rgba(BLANCO, 0.95) : rgba(SUAVE, 0.8);
+		f.forEach((l, i) => lc.fillText(l, x + 28, yy + i * 18));
+		yy += f.length * 18 + 6;
+	}
+}
+
+function cuadroMapa(ahora) {
+	const dt = Math.min(0.05, (ahora - ultimoMapa) / 1000);
+	ultimoMapa = ahora; t += dt;
+	if (!arrastrando) {
+		giro += dt * 0.12 + velGiro; inclinacion += velInc;
+		velGiro *= 0.94; velInc *= 0.94;
+		inclinacion += (-0.32 - inclinacion) * 0.01;   // vuelve despacio a su angulo
+	}
+	dibujar();
+	requestAnimationFrame(cuadroMapa);
+}
+
+// arrastrar para girar
+lienzo.addEventListener("pointerdown", (e) => {
+	arrastrando = { x: e.clientX, y: e.clientY };
+	lienzo.setPointerCapture(e.pointerId);
+});
+lienzo.addEventListener("pointermove", (e) => {
+	const r = lienzo.getBoundingClientRect();
+	raton.x = e.clientX - r.left; raton.y = e.clientY - r.top; raton.dentro = true;
+	if (!arrastrando) return;
+	const dx = e.clientX - arrastrando.x, dy = e.clientY - arrastrando.y;
+	arrastrando = { x: e.clientX, y: e.clientY };
+	giro += dx * 0.008; inclinacion = Math.max(-1.2, Math.min(1.2, inclinacion + dy * 0.006));
+	velGiro = dx * 0.0016; velInc = dy * 0.0008;
+	if (reducido) dibujar();
+});
+const soltar = () => { arrastrando = null; };
+lienzo.addEventListener("pointerup", soltar);
+lienzo.addEventListener("pointercancel", soltar);
+lienzo.addEventListener("pointerleave", () => { raton.dentro = false; if (reducido) dibujar(); });
+window.addEventListener("resize", () => { medir(); if (reducido) dibujar(); });
+
+window.lyraMapa = {
+	actualizar,
+	posicion(tema) {
+		const s = satelites[tema];
+		if (!s) return null;
+		const r = lienzo.getBoundingClientRect();
+		return { x: r.left + s.x, y: r.top + s.y };
+	},
+};
+medir();
+// Si la entrevista cargo antes que este modulo, se toma su ultimoMapa estado.
+if (window.lyraMapaDatos) actualizar(window.lyraMapaDatos.estado, null);
+document.fonts && document.fonts.ready.then(() => { if (reducido) dibujar(); });
+if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
+</script>
+<script>
+(() => {
+	const API = "/api/method/lyra_ia.diagnostico.entrevista.";
+	const API_PLAN = "/api/method/lyra_ia.diagnostico.recomendacion.";
+	const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+	const $ = (id) => document.getElementById(id);
+	const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+	let estado = null;
+	// Si la persona activo la voz, se recuerda para la proxima vez (solo en este navegador).
+	let leerEnVoz = false;
+	try { leerEnVoz = localStorage.getItem("lyra_voz") === "1"; } catch (e) {}
+	// El orbe se carga como modulo aparte; si aun no esta listo, se ignora.
+	const orbe = (s) => window.lyraOrbe && window.lyraOrbe(s);
+
+	async function api(metodo, args, post) {
+		const ruta = metodo.startsWith("plan:") ? API_PLAN + metodo.slice(5)
+			: metodo.startsWith("voz:") ? "/api/method/lyra_ia.voz." + metodo.slice(4) : API + metodo;
+		const r = await fetch(ruta, {
+			method: post ? "POST" : "GET",
+			headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": CSRF, Accept: "application/json" },
+			body: post ? JSON.stringify(args || {}) : undefined,
+			credentials: "same-origin",
+		});
+		const d = await r.json().catch(() => ({}));
+		if (!r.ok && d.exc_type === "DoesNotExistError") {
+			const e = new Error("perdida"); e.perdida = true; throw e;
+		}
+		if (!r.ok) {
+			let msg = "No se pudo guardar tu respuesta. Revisa tu conexión e inténtalo de nuevo.";
+			try { msg = JSON.parse(JSON.parse(d._server_messages)[0]).message || msg; } catch (e) {}
+			throw new Error(msg);
+		}
+		return d.message;
+	}
+
+	// ------------------------------------------------------------- mapa
+	// El mapa vivo lo dibuja el modulo de arriba (window.lyraMapa); aqui solo
+	// se le pasa el estado. La lista oculta es para lectores de pantalla.
+	function dibujar(nuevos) {
+		window.lyraMapaDatos = { estado, nuevos };
+		if (window.lyraMapa) window.lyraMapa.actualizar(estado, nuevos);
+		$("mapa-texto").innerHTML = estado.temas.map((t) =>
+			`<li>${esc(t.nombre)}: ${(estado.mapa[t.clave] || []).map(esc).join(", ") || "pendiente"}</li>`).join("");
+	}
+
+	// ------------------------------------------------------------ avance
+	function pintarAvance() {
+		const fase = estado.completo || estado.estado === "Confirmado" ? "Ya te conozco"
+			: ["persona", "acuerdo"].includes(estado.siguiente && estado.siguiente.tema) ? "Conociéndote" : "Conociendo tu empresa";
+		$("avance").innerHTML = `<b class="latido"></b><span>${esc(fase)}</span>`;
+	}
+
+	// ---------------------------------------------------------- pregunta
+	let escribiendo = null;
+	function mostrarPregunta(texto, contexto) {
+		const h = $("pregunta");
+		clearInterval(escribiendo);
+		$("contexto").textContent = contexto || "";
+		hablar(texto);
+		if (reducido) { h.textContent = texto; return; }
+		h.textContent = "";
+		let i = 0;
+		escribiendo = setInterval(() => {
+			h.textContent = texto.slice(0, ++i);
+			if (i >= texto.length) clearInterval(escribiendo);
+		}, 18);
+	}
+
+	// La voz de Lyra: la de ElevenLabs si el equipo la activo (el audio lo pide el
+	// servidor, la clave no sale de alli); si no, o si falla, la del navegador.
+	let audioActual = null, turnoVoz = 0;
+	function callar() {
+		turnoVoz++;
+		if (audioActual) { audioActual.pause(); audioActual = null; }
+		if ("speechSynthesis" in window) speechSynthesis.cancel();
+	}
+	function vozNavegador(texto) {
+		if (!("speechSynthesis" in window)) return;
+		const u = new SpeechSynthesisUtterance(texto);
+		u.lang = "es-CO"; u.rate = 1.02;
+		speechSynthesis.speak(u);
+	}
+	async function hablar(texto) {
+		callar();
+		if (!leerEnVoz || !texto) return;
+		const turno = turnoVoz;
+		if (!estado || !estado.voz) { vozNavegador(texto); return; }
+		try {
+			const r = await api("voz:hablar", { texto }, true);
+			if (turno !== turnoVoz) return;   // ya hay otra frase: esta se descarta
+			if (!r || !r.audio) { vozNavegador(texto); return; }
+			audioActual = new Audio(`data:${r.tipo || "audio/mpeg"};base64,${r.audio}`);
+			audioActual.onended = () => { audioActual = null; if (!estado.completo) orbe("breathing"); };
+			orbe("composing");
+			await audioActual.play();
+		} catch (e) {
+			if (turno === turnoVoz) vozNavegador(texto);
+		}
+	}
+
+	function pintar(nuevos) {
+		const escena = $("escena");
+		escena.classList.toggle("final", estado.completo && estado.estado !== "Confirmado");
+		escena.classList.toggle("fin", estado.estado === "Confirmado");
+		pintarAvance();
+		dibujar(nuevos);
+		orbe(estado.estado === "Confirmado" ? "weaving" : estado.completo ? "shaping" : "breathing");
+		if (estado.estado === "Confirmado") {
+			cargarPlan();
+			return;
+		}
+		if (estado.completo) {
+			mostrarPregunta(`Gracias${estado.nombre_usuario ? ", " + estado.nombre_usuario : ""}. Esto es lo que entendí de tu empresa.`,
+				"Quita lo que no esté bien o agrega lo que falte. Cuando lo confirmes, te digo cómo te voy a ayudar.");
+			pintarRevision();
+			return;
+		}
+		const s = estado.siguiente;
+		mostrarPregunta(s.pregunta, estado.saludo || "");
+		$("sugerencias").innerHTML = (s.sugerencias || []).map((x) => `<button type="button">${esc(x)}</button>`).join("");
+		$("texto").value = "";
+		ajustarAlto();
+		actualizarBoton();
+		setTimeout(() => $("texto").focus(), reducido ? 0 : 400);
+	}
+
+	// -------------------------------------------------------------- ayuda
+	// Despues de confirmar: Lyra le dice al dueno como lo va a ayudar a mejorar.
+	// No hay modulos ni nada que aprobar: eso lo decide el Equipo Lyra.
+	let ayuda = null;
+	async function cargarPlan() {
+		mostrarPregunta(`Déjame pensar cómo te puedo ayudar${estado.nombre_usuario ? ", " + estado.nombre_usuario : ""}…`, "");
+		orbe("connecting");
+		$("plan").innerHTML = "";
+		try {
+			ayuda = await api("plan:plan", { name: estado.name }, true);
+		} catch (e) {
+			mostrarPregunta("No pude terminar de pensarlo.", "");
+			$("error").textContent = e.message;
+			orbe("breathing");
+			return;
+		}
+		orbe("weaving");
+		mostrarPregunta(ayuda.titulo, ayuda.resumen || "");
+		const icono = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>`;
+		$("plan").innerHTML = `
+			${(ayuda.puntos || []).map((p) => `
+				<div class="punto">
+					<span class="marca-punto" aria-hidden="true">${icono}</span>
+					<h3>${esc(p.titulo)}</h3>
+					<p class="como">${esc(p.como)}</p>
+					${p.porque ? `<p class="porque">${esc(p.porque)}</p>` : ""}
+				</div>`).join("")}
+			${ayuda.primero ? `<p class="primero">${esc(ayuda.primero)}</p>` : ""}
+			<div class="acciones-plan"><a class="confirmar" href="/app">Empecemos</a></div>`;
+	}
+
+	// ---------------------------------------------------------- revision
+	function pintarRevision() {
+		$("grupos").innerHTML = estado.temas.map((t) => `
+			<div class="grupo" data-tema="${t.clave}">
+				<h3>${esc(t.nombre)}</h3>
+				<div class="datos">
+					${(estado.mapa[t.clave] || []).map((d, i) => `<span class="dato ${t.clave === "dolores" ? "dolor" : ""}">${esc(d)}
+						<button type="button" data-quitar="${i}" aria-label="Quitar ${esc(d)}">×</button></span>`).join("")}
+					<input class="agregar" placeholder="Agregar" aria-label="Agregar a ${esc(t.nombre)}">
+				</div>
+			</div>`).join("");
+	}
+	$("grupos").addEventListener("click", (e) => {
+		const b = e.target.closest("[data-quitar]");
+		if (!b) return;
+		const tema = b.closest(".grupo").dataset.tema;
+		estado.mapa[tema].splice(Number(b.dataset.quitar), 1);
+		pintarRevision(); dibujar();
+	});
+	$("grupos").addEventListener("keydown", (e) => {
+		if (e.key !== "Enter" || !e.target.classList.contains("agregar")) return;
+		const v = e.target.value.trim();
+		if (!v) return;
+		const tema = e.target.closest(".grupo").dataset.tema;
+		estado.mapa[tema].push(v);
+		pintarRevision(); dibujar({ [tema]: [v] });
+		const nuevo = document.querySelector(`.grupo[data-tema="${tema}"] .agregar`);
+		nuevo && nuevo.focus();
+	});
+	$("confirmar").addEventListener("click", async () => {
+		$("error").textContent = "";
+		try {
+			await api("confirmar", { name: estado.name, mapa: estado.mapa }, true);
+			estado.estado = "Confirmado";
+			pintar();
+		} catch (e) { $("error").textContent = e.message; }
+	});
+	$("reiniciar").addEventListener("click", async () => {
+		if (!confirm("¿Empezar la entrevista de nuevo? Se borra lo que respondiste.")) return;
+		estado = await api("empezar_de_nuevo", { name: estado.name }, true);
+		pintar();
+	});
+
+	// ---------------------------------------------------------- responder
+	const texto = $("texto");
+	function ajustarAlto() { texto.style.height = "auto"; texto.style.height = Math.min(texto.scrollHeight, 180) + "px"; }
+	function actualizarBoton() { $("enviar").disabled = !texto.value.trim(); }
+	texto.addEventListener("input", () => { ajustarAlto(); actualizarBoton(); });
+	texto.addEventListener("keydown", (e) => {
+		if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); responder(); }
+	});
+	$("enviar").addEventListener("click", responder);
+	$("sugerencias").addEventListener("click", (e) => {
+		const b = e.target.closest("button");
+		if (!b) return;
+		texto.value = texto.value.trim() ? texto.value.trim() + ", " + b.textContent : b.textContent;
+		ajustarAlto(); actualizarBoton(); texto.focus();
+	});
+
+	// La respuesta viaja hasta su tema en el mapa: el unico momento animado.
+	function viajar(valor, tema) {
+		const destino = window.lyraMapa && window.lyraMapa.posicion(tema);
+		if (reducido || !destino) return;
+		const origen = texto.getBoundingClientRect();
+		const v = document.createElement("div");
+		v.className = "viajera";
+		v.textContent = valor;
+		v.style.left = origen.left + "px";
+		v.style.top = origen.top + 6 + "px";
+		document.body.appendChild(v);
+		requestAnimationFrame(() => {
+			v.style.transform = `translate(${destino.x - origen.left - 20}px, ${destino.y - origen.top - 14}px) scale(.35)`;
+			v.style.opacity = "0";
+		});
+		setTimeout(() => v.remove(), 1000);
+	}
+
+	let enviando = false;
+	async function responder() {
+		const valor = texto.value.trim();
+		if (!valor || enviando || !estado || estado.completo) return;
+		enviando = true;
+		$("error").textContent = "";
+		const s = estado.siguiente;
+		viajar(valor, s.tema);
+		texto.value = ""; ajustarAlto(); actualizarBoton();
+		orbe("connecting");
+		$("sugerencias").innerHTML = "";
+		try {
+			estado = await api("responder", { name: estado.name, tema: s.tema, pregunta: s.pregunta, respuesta: valor }, true);
+			pintar(estado.nuevos);
+		} catch (e) {
+			if (e.perdida) {
+				// La entrevista ya no existe (por ejemplo, se empezó de nuevo en otra pestaña): se recarga.
+				estado = await api("estado", {}, true);
+				pintar();
+				texto.value = valor; ajustarAlto(); actualizarBoton();
+				$("error").textContent = "Retomé la entrevista. Vuelve a enviar tu respuesta.";
+			} else {
+				texto.value = valor; ajustarAlto(); actualizarBoton();
+				$("error").textContent = e.message;
+			}
+		} finally {
+			if (!estado.completo) orbe("breathing");
+			enviando = false;
+		}
+	}
+
+	// ------------------------------------------------------- hablar / oir
+	const Reconocer = window.SpeechRecognition || window.webkitSpeechRecognition;
+	let oyendo = null;
+	if (!Reconocer) $("mic").style.display = "none";
+	$("mic").addEventListener("click", () => {
+		if (oyendo) { oyendo.stop(); return; }
+		const r = new Reconocer();
+		r.lang = "es-CO"; r.interimResults = true; r.continuous = false;
+		const base = texto.value.trim();
+		r.onresult = (e) => {
+			const dicho = Array.from(e.results).map((x) => x[0].transcript).join(" ");
+			texto.value = (base ? base + " " : "") + dicho;
+			ajustarAlto(); actualizarBoton();
+		};
+		r.onend = () => { oyendo = null; $("mic").classList.remove("activo"); orbe("breathing"); texto.focus(); };
+		r.onerror = () => { $("error").textContent = "No pude escucharte. Revisa el permiso del micrófono o escribe tu respuesta."; };
+		oyendo = r; r.start();
+		$("mic").classList.add("activo"); orbe("listening");
+	});
+	$("voz").addEventListener("click", () => {
+		leerEnVoz = !leerEnVoz;
+		try { localStorage.setItem("lyra_voz", leerEnVoz ? "1" : "0"); } catch (e) {}
+		pintarBotonVoz();
+		if (!leerEnVoz) callar();
+		else hablar($("pregunta").textContent);
+	});
+	function pintarBotonVoz() {
+		$("voz").setAttribute("aria-pressed", String(leerEnVoz));
+		$("voz").textContent = leerEnVoz ? "Lyra habla en voz alta" : "Escuchar a Lyra";
+	}
+	pintarBotonVoz();
+
+
+	api("estado", {}, true).then((d) => { estado = d; pintar(); }).catch((e) => {
+		$("pregunta").textContent = "No pude cargar la entrevista.";
+		$("error").textContent = e.message;
+	});
+})();
+</script>
+</body>
+</html>

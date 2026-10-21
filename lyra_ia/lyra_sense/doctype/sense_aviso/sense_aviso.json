@@ -1,0 +1,118 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-19 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Sense",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Sense Aviso",
+ "fields": [
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Para",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "label": "Tipo",
+   "options": "Aviso\nCorrección",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "label": "Estado",
+   "options": "Nuevo\nVisto\nDeshecho",
+   "default": "Nuevo",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "mensaje",
+   "fieldtype": "Small Text",
+   "label": "Mensaje"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "regla",
+   "fieldtype": "Link",
+   "options": "Sense Regla",
+   "label": "Regla"
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Área"
+  },
+  {
+   "fieldname": "ref_doctype",
+   "fieldtype": "Link",
+   "options": "DocType",
+   "label": "Tipo de documento"
+  },
+  {
+   "fieldname": "ref_name",
+   "fieldtype": "Dynamic Link",
+   "options": "ref_doctype",
+   "label": "Documento"
+  },
+  {
+   "fieldname": "campo",
+   "fieldtype": "Data",
+   "label": "Campo"
+  },
+  {
+   "fieldname": "valor_anterior",
+   "fieldtype": "Small Text",
+   "label": "Valor anterior"
+  },
+  {
+   "fieldname": "valor_nuevo",
+   "fieldtype": "Small Text",
+   "label": "Valor puesto por Lyra"
+  }
+ ],
+ "field_order": [
+  "usuario",
+  "tipo",
+  "estado",
+  "mensaje",
+  "column_break_1",
+  "regla",
+  "area",
+  "ref_doctype",
+  "ref_name",
+  "campo",
+  "valor_anterior",
+  "valor_nuevo"
+ ],
+ "autoname": "hash",
+ "in_create": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1
+  },
+  {
+   "role": "All",
+   "read": 1,
+   "if_owner": 1
+  }
+ ],
+ "description": "Avisos y correcciones de Lyra. Cada persona ve solo los suyos."
+}

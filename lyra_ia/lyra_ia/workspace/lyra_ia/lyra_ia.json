@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"ia_hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lyra IA</b></span>\", \"col\": 12}}, {\"id\": \"ia_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Asistente\", \"col\": 3}}, {\"id\": \"ia_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Clasificaciones\", \"col\": 3}}, {\"id\": \"ia_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Uso y costo\", \"col\": 3}}, {\"id\": \"ia_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Ajustes de IA\", \"col\": 3}}, {\"id\": \"ia_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ia_card\", \"type\": \"card\", \"data\": {\"card_name\": \"Inteligencia artificial\", \"col\": 6}}]",
+ "content": "[{\"id\": \"ia_hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Lyra IA</b></span>\", \"col\": 12}}, {\"id\": \"ia_sc_diag\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Conocer la empresa\", \"col\": 3}}, {\"id\": \"ia_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Asistente\", \"col\": 3}}, {\"id\": \"ia_sc_sense\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lyra se da cuenta\", \"col\": 3}}, {\"id\": \"ia_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Clasificaciones\", \"col\": 3}}, {\"id\": \"ia_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Uso y costo\", \"col\": 3}}, {\"id\": \"ia_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Ajustes de IA\", \"col\": 3}}, {\"id\": \"ia_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ia_card\", \"type\": \"card\", \"data\": {\"card_name\": \"Inteligencia artificial\", \"col\": 6}}, {\"id\": \"ia_card_sense\", \"type\": \"card\", \"data\": {\"card_name\": \"Lyra se da cuenta\", \"col\": 6}}, {\"id\": \"ia_card_diag\", \"type\": \"card\", \"data\": {\"card_name\": \"Primer acercamiento\", \"col\": 6}}]",
  "creation": "2026-10-14 22:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -16,7 +16,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Inteligencia artificial",
-   "link_count": 5,
+   "link_count": 6,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -74,9 +74,102 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alma",
+   "link_count": 0,
+   "link_to": "Lyra Alma",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lyra se da cuenta",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lyra se da cuenta",
+   "link_count": 0,
+   "link_to": "lyra-sense",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reglas",
+   "link_count": 0,
+   "link_to": "Sense Regla",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Avisos",
+   "link_count": 0,
+   "link_to": "Sense Aviso",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reportes semanales",
+   "link_count": 0,
+   "link_to": "Sense Reporte",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ajustes de Lyra se da cuenta",
+   "link_count": 0,
+   "link_to": "Sense Ajustes",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Primer acercamiento",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Diagnósticos de la empresa",
+   "link_count": 0,
+   "link_to": "Diagnostico Empresa",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-10-14 22:00:00.000000",
+ "modified": "2026-10-19 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Lyra IA",
  "name": "Lyra IA",
@@ -90,8 +183,28 @@
  "sequence_id": 30.0,
  "shortcuts": [
   {
+   "label": "Conocer la empresa",
+   "link_to": "",
+   "type": "URL",
+   "url": "/lyra",
+   "color": "Blue",
+   "doc_view": "",
+   "stats_filter": "[]",
+   "format": ""
+  },
+  {
    "label": "Asistente",
    "link_to": "asistente-ia",
+   "type": "Page",
+   "color": "Grey",
+   "doc_view": "",
+   "stats_filter": "[]",
+   "format": "",
+   "url": ""
+  },
+  {
+   "label": "Lyra se da cuenta",
+   "link_to": "lyra-sense",
    "type": "Page",
    "color": "Grey",
    "doc_view": "",

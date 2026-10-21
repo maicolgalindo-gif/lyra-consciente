@@ -1,7 +1,7 @@
 [project]
 name = "lyra_ia"
 authors = [{ name = "Algoritmia Labs", email = "maicol.galindo@devshouse.org" }]
-description = "Inteligencia artificial de Lyra: cerebro LLM (DeepSeek u otro compatible), registro de uso y clasificaciones para todo el CRM."
+description = "Lyra Consciente: la inteligencia de Lyra ERX (diagnóstico, asistente, Lyra se da cuenta, alma y voz)."
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]

@@ -15,6 +15,14 @@ frappe.ui.form.on("IA Ajustes", {
 				indicator: m.ok ? "green" : "red" });
 			frm.reload_doc();
 		});
+		frm.add_custom_button("Probar voz", async () => {
+			if (frm.is_dirty()) await frm.save();
+			const r = await frappe.call({ method: "lyra_ia.voz.probar", type: "POST", freeze: true, freeze_message: "Lyra está hablando…" });
+			const m = r.message || {};
+			if (m.audio) new Audio(`data:audio/mpeg;base64,${m.audio}`).play();
+			frappe.show_alert({ message: frappe.utils.escape_html(m.estado || ""), indicator: m.ok ? "green" : "red" }, 8);
+			frm.reload_doc();
+		});
 		frm.add_custom_button("Ir al asistente", () => frappe.set_route("asistente-ia"));
 		frappe.call({ method: "lyra_ia.cerebro.resumen_gasto" }).then((r) => {
 			const g = r.message || {};

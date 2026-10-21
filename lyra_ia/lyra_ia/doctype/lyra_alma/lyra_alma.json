@@ -1,0 +1,84 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-20 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "module": "Lyra IA",
+ "name": "Lyra Alma",
+ "owner": "Administrator",
+ "modified": "2026-10-20 10:00:00.000000",
+ "modified_by": "Administrator",
+ "description": "Lo que Lyra sabe de esta empresa. Se llena sola con lo que va aprendiendo.",
+ "fields": [
+  {
+   "fieldname": "intro",
+   "fieldtype": "HTML",
+   "options": "<p class=\"text-muted\">El alma es lo que Lyra sabe de esta empresa. Se llena sola: con la entrevista del dueño, los datos de la empresa y lo que se vende. Se actualiza cada día y cada vez que se confirma un diagnóstico. La IA la usa en todo lo que hace. Solo la ve el equipo de Lyra.</p>"
+  },
+  {
+   "fieldname": "sec_alma",
+   "fieldtype": "Section Break",
+   "label": "Lo que Lyra sabe"
+  },
+  {
+   "fieldname": "alma",
+   "fieldtype": "Long Text",
+   "label": "Alma",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actualizada_el",
+   "fieldtype": "Datetime",
+   "label": "Actualizada el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_f",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fuentes",
+   "fieldtype": "Small Text",
+   "label": "De dónde lo aprendió",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_equipo",
+   "fieldtype": "Section Break",
+   "label": "Notas del equipo Lyra"
+  },
+  {
+   "fieldname": "notas_equipo",
+   "fieldtype": "Long Text",
+   "label": "Notas del equipo",
+   "description": "Lo que Lyra no puede aprender sola: tono, políticas, condiciones especiales. Se suma al alma."
+  }
+ ],
+ "field_order": [
+  "intro",
+  "sec_alma",
+  "alma",
+  "actualizada_el",
+  "column_break_f",
+  "fuentes",
+  "sec_equipo",
+  "notas_equipo"
+ ],
+ "permissions": [
+  {
+   "role": "Equipo Lyra",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

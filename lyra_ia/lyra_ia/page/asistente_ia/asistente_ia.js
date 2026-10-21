@@ -89,8 +89,8 @@ class AsistenteLyra {
 		const $a = this.$.find(".aviso-ia");
 		if (!this.estado.lista) {
 			$a.html(`<div class="alert alert-warning">La IA todavía no está activa.
-				${this.estado.es_admin ? `Configúrala en <a href="/app/ia-ajustes">IA Ajustes</a>: proveedor, clave y activar.`
-					: "Pídele al administrador que la active."}</div>`);
+				${this.estado.es_equipo ? `Configúrala en <a href="/app/ia-ajustes">IA Ajustes</a>: proveedor, clave y activar.`
+					: "Pídele al equipo de Lyra que la active."}</div>`);
 		} else {
 			$a.empty();
 		}

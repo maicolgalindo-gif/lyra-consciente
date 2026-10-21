@@ -188,7 +188,7 @@ def _mensaje_de_error(r: requests.Response) -> str:
 # --------------------------------------------------------- configuracion
 @frappe.whitelist(methods=["POST"])
 def probar_conexion() -> dict:
-	frappe.only_for("System Manager")
+	frappe.only_for("Equipo Lyra")
 	inicio = time.monotonic()
 	try:
 		texto = completar([{"role": "user", "content": "Responde solo: OK"}], funcion="prueba de conexión", max_tokens=5)
@@ -203,7 +203,7 @@ def probar_conexion() -> dict:
 
 @frappe.whitelist()
 def resumen_gasto() -> dict:
-	frappe.only_for("System Manager")
+	frappe.only_for("Equipo Lyra")
 	a = ajustes()
 	mes = get_first_day(nowdate())
 	fila = frappe.db.sql(

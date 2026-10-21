@@ -1,0 +1,125 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-19 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Sense",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Sense Regla",
+ "fields": [
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Nombre",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "activa",
+   "fieldtype": "Check",
+   "label": "Activa",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "ref_doctype",
+   "fieldtype": "Link",
+   "options": "DocType",
+   "label": "¿En qué documento?",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "evento",
+   "fieldtype": "Select",
+   "label": "¿Cuándo se revisa?",
+   "options": "Al guardar\nAl crear\nAl validar",
+   "default": "Al guardar",
+   "reqd": 1
+  },
+  {
+   "fieldname": "campo",
+   "fieldtype": "Autocomplete",
+   "label": "¿Qué dato no puede faltar?",
+   "reqd": 1,
+   "description": "El campo del documento (se elige de la lista)."
+  },
+  {
+   "fieldname": "condicion",
+   "fieldtype": "Code",
+   "options": "Python",
+   "label": "Solo si (opcional)",
+   "description": "Expresión con doc, por ejemplo: doc.estado == \"Resuelta\". Vacío: siempre."
+  },
+  {
+   "fieldname": "sec_accion",
+   "fieldtype": "Section Break",
+   "label": "¿Qué hace Lyra?"
+  },
+  {
+   "fieldname": "modo",
+   "fieldtype": "Select",
+   "label": "Si falta",
+   "options": "Avisar\nCompletar",
+   "default": "Avisar",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Completar solo en borradores, nunca en montos, consentimientos ni documentos validados; siempre con Deshacer."
+  },
+  {
+   "fieldname": "valor",
+   "fieldtype": "Data",
+   "label": "Completar con",
+   "depends_on": "eval:doc.modo=='Completar'",
+   "description": "Un valor fijo, o {usuario} para quien guardó el documento."
+  },
+  {
+   "fieldname": "mensaje",
+   "fieldtype": "Small Text",
+   "label": "Mensaje propio (opcional)",
+   "description": "Si lo dejas vacío, Lyra escribe uno cálido. Puedes usar {nombre}, {documento} y {campo}."
+  },
+  {
+   "fieldname": "veces",
+   "fieldtype": "Int",
+   "label": "Veces que se activó",
+   "read_only": 1,
+   "default": "0",
+   "in_list_view": 1
+  }
+ ],
+ "field_order": [
+  "titulo",
+  "activa",
+  "ref_doctype",
+  "evento",
+  "campo",
+  "condicion",
+  "sec_accion",
+  "modo",
+  "valor",
+  "mensaje",
+  "veces"
+ ],
+ "autoname": "hash",
+ "title_field": "titulo",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "export": 1
+  }
+ ],
+ "description": "Reglas de Lyra se da cuenta."
+}

@@ -130,3 +130,35 @@ window.lyra_ia = {
 		d.show();
 	},
 };
+
+// ---------------------------------------------------------------------------
+// Lyra se da cuenta: el aviso privado que le llega a quien guardo el documento
+// (solo a esa persona). Si Lyra completo un dato, trae «Deshacer».
+$(document).on("app_ready", () => {
+	if (!frappe.realtime || lyra_ia._sense_escuchando) return;
+	lyra_ia._sense_escuchando = true;
+	frappe.realtime.on("lyra_sense_aviso", (d) => {
+		const correccion = d.tipo === "Corrección";
+		const $a = frappe.show_alert(
+			{
+				message: `<div class="lyra-sense-aviso"><b>Lyra</b> · ${escIA(d.mensaje)}
+					<div class="acciones">${correccion ? `<a class="deshacer">Deshacer</a>` : ""}<a class="ver">Ver</a></div></div>`,
+				indicator: correccion ? "green" : "orange",
+			},
+			14
+		);
+		if (!$a || !$a.find) return;
+		$a.find(".deshacer").on("click", async (e) => {
+			e.preventDefault();
+			const r = await frappe.call({ method: "lyra_ia.sense.reglas.deshacer", args: { aviso: d.aviso }, type: "POST" });
+			const m = r.message || {};
+			frappe.show_alert({ message: m.ok ? "Listo, lo dejé como estaba." : m.mensaje || "No se pudo deshacer.", indicator: m.ok ? "green" : "orange" });
+			if (m.ok && cur_frm && cur_frm.doc && d.ruta.endsWith("/" + cur_frm.doc.name)) cur_frm.reload_doc();
+		});
+		$a.find(".ver").on("click", (e) => {
+			e.preventDefault();
+			frappe.call({ method: "lyra_ia.sense.avisos.marcar_visto", args: { aviso: d.aviso }, type: "POST" });
+			frappe.router.push_state(d.ruta);
+		});
+	});
+});

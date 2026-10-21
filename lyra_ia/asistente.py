@@ -24,12 +24,14 @@ MAX_HISTORIA = 20     # mensajes anteriores que se le recuerdan al modelo
 
 
 def _empresa() -> str:
-	return frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company") or ""
+	from lyra_ia.entorno import empresa
+
+	return empresa()
 
 
 def _sistema(disponibles: list[dict]) -> str:
 	modulos = sorted({h["modulo"] for h in disponibles})
-	ctx = (cerebro.ajustes().contexto_negocio or "").strip()
+	from lyra_ia import alma
 	return (
 		f"Eres Lyra, el asistente del ERP/CRM de {_empresa()} (Colombia). Hablas con "
 		f"{frappe.utils.get_fullname(frappe.session.user)}. Hoy es {format_date(nowdate(), 'dd-MM-yyyy')}.\n"
@@ -43,7 +45,7 @@ def _sistema(disponibles: list[dict]) -> str:
 		"- Todavía no puedes crear, enviar ni modificar nada. Si te lo piden, explica qué harías y que esa función "
 		"llega pronto; si te piden redactar un mensaje, redáctalo para que la persona lo copie.\n"
 		"- Si piden algo de un módulo al que no tienen acceso, dilo con amabilidad."
-		+ (f"\n\nLo que sabes del negocio:\n{ctx}" if ctx else "")
+		+ alma.contexto_para_ia()
 	)
 
 
@@ -61,7 +63,7 @@ def estado() -> dict:
 	disponibles = herramientas.disponibles()
 	return {
 		"lista": cerebro.lista(),
-		"es_admin": "System Manager" in frappe.get_roles(),
+		"es_equipo": "Equipo Lyra" in frappe.get_roles(),
 		"modulos": sorted({h["modulo"] for h in disponibles}),
 		"herramientas": [h["nombre"] for h in disponibles],
 	}

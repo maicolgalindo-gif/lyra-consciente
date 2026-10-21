@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-19 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Sense",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Sense Reporte",
+ "fields": [
+  {
+   "fieldname": "semana",
+   "fieldtype": "Date",
+   "label": "Semana desde",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enviado_a",
+   "fieldtype": "Small Text",
+   "label": "Enviado a",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "texto",
+   "fieldtype": "Long Text",
+   "label": "Reporte"
+  },
+  {
+   "fieldname": "cifras",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Cifras",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "semana",
+  "enviado_a",
+  "texto",
+  "cifras"
+ ],
+ "autoname": "hash",
+ "in_create": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "description": "Reportes semanales enviados al dueño."
+}

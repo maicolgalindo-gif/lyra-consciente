@@ -123,15 +123,47 @@
    "description": "Útil para revisar y mejorar. Se borra solo a los 90 días (Log Settings)."
   },
   {
-   "fieldname": "seccion_negocio",
+   "fieldname": "seccion_voz",
    "fieldtype": "Section Break",
-   "label": "Lo que la IA debe saber del negocio"
+   "label": "Voz de Lyra (ElevenLabs)",
+   "collapsible": 0
   },
   {
-   "fieldname": "contexto_negocio",
-   "fieldtype": "Long Text",
-   "label": "Contexto del negocio",
-   "description": "Qué venden, horarios, precios, requisitos, políticas y el tono para hablar con los clientes. La IA lo usa al sugerir respuestas."
+   "fieldname": "voz_activa",
+   "fieldtype": "Check",
+   "label": "Usar la voz de ElevenLabs",
+   "default": "0",
+   "description": "Sin esto, o si ElevenLabs falla, Lyra habla con la voz del navegador."
+  },
+  {
+   "fieldname": "voz_clave",
+   "fieldtype": "Password",
+   "label": "Clave de ElevenLabs",
+   "length": 200
+  },
+  {
+   "fieldname": "column_break_v",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "voz_id",
+   "fieldtype": "Data",
+   "label": "ID de la voz",
+   "default": "86V9x9hrQds83qf7zaGn",
+   "description": "El ID que sale en la página de la voz en elevenlabs.io."
+  },
+  {
+   "fieldname": "voz_modelo",
+   "fieldtype": "Data",
+   "label": "Modelo de voz",
+   "default": "eleven_multilingual_v2",
+   "description": "eleven_multilingual_v2: la más natural. eleven_flash_v2_5: más rápida y cuesta la mitad."
+  },
+  {
+   "fieldname": "voz_estado",
+   "fieldtype": "Small Text",
+   "label": "Última prueba de voz",
+   "read_only": 1
   }
  ],
  "field_order": [
@@ -144,6 +176,13 @@
   "modelo_chat",
   "modelo_razonador",
   "estado_conexion",
+  "seccion_voz",
+  "voz_activa",
+  "voz_clave",
+  "column_break_v",
+  "voz_id",
+  "voz_modelo",
+  "voz_estado",
   "seccion_costo",
   "precio_entrada",
   "precio_salida",
@@ -152,23 +191,16 @@
   "gasto_mes",
   "seccion_privacidad",
   "ocultar_datos",
-  "guardar_textos",
-  "seccion_negocio",
-  "contexto_negocio"
+  "guardar_textos"
  ],
  "issingle": 1,
  "permissions": [
   {
-   "role": "System Manager",
+   "role": "Equipo Lyra",
    "read": 1,
-   "report": 1,
    "write": 1,
    "create": 1,
-   "delete": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "print": 1
   }
  ],
  "description": "Configuración de la inteligencia artificial de Lyra."

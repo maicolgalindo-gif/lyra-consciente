@@ -138,16 +138,17 @@ def ventas_del_periodo(dias: int = 30) -> dict:
 # ------------------------------------------------------------- WhatsApp
 def _chats(canal: str, buscar: str | None, estado: str) -> list[dict]:
 	salida = []
-	if canal in ("meta", "todos") and frappe.has_permission("WhatsApp Message", "read"):
+	# WhatsApp oficial y WAHA son apps independientes: cada canal solo si su app esta.
+	if canal in ("meta", "todos") and _app("lyra_whatsapp") and frappe.has_permission("WhatsApp Message", "read"):
 		from lyra_whatsapp.conversaciones.api import listar
 
 		for c in (listar(buscar=buscar, vista="todos", estado="Resuelta" if estado == "resuelto" else "Abierta") or {}).get("chats", [])[:LIMITE]:
 			salida.append({"canal": "meta", "id": c.get("numero"), "nombre": c.get("nombre"), "numero": c.get("numero"),
 						   "ultimo": c.get("ultimo"), "ultimo_mensaje": c.get("resumen"), "sin_responder": c.get("sin_responder"),
 						   "etiquetas": c.get("etiquetas")})
-	if canal in ("waha", "todos") and frappe.db.exists("DocType", "WAHA Chat"):
+	if canal in ("waha", "todos") and _app("lyra_waha"):
 		try:
-			from lyra_whatsapp.waha_chat import listar as listar_waha
+			from lyra_waha.waha_chat import listar as listar_waha
 
 			for c in (listar_waha(buscar=buscar, vista="todos", estado="Resuelto" if estado == "resuelto" else "Abierto") or {}).get("chats", [])[:LIMITE]:
 				salida.append({"canal": "waha", "id": c.get("chat_id"), "nombre": c.get("nombre"), "numero": c.get("numero"),
@@ -179,7 +180,7 @@ def leer_chat(canal: str, id: str) -> dict:
 # --------------------------------------------------------------- registro
 def herramientas() -> list[dict]:
 	erp = lambda: _app("erpnext")
-	whatsapp = lambda: _app("lyra_whatsapp")
+	whatsapp = lambda: _app("lyra_whatsapp") or _app("lyra_waha")
 	return [
 		{"nombre": "buscar_registros", "modulo": "CRM",
 		 "descripcion": "Busca clientes, clientes potenciales, contactos, oportunidades, cotizaciones, pedidos o facturas por nombre, código o celular.",

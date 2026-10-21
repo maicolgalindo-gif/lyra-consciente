@@ -1,0 +1,169 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 18:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-19 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Diagnostico",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Diagnostico Empresa",
+ "autoname": "hash",
+ "title_field": "empresa",
+ "description": "El primer acercamiento de Lyra con la empresa: la entrevista al dueño y el mapa que sale de ella.",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Equipo Lyra",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Equipo Lyra",
+   "permlevel": 1,
+   "read": 1,
+   "write": 1
+  }
+ ],
+ "fields": [
+  {
+   "fieldname": "empresa",
+   "fieldtype": "Data",
+   "label": "Empresa",
+   "in_list_view": 1,
+   "description": "La empresa de ERPNext, si está instalado."
+  },
+  {
+   "fieldname": "nombre_negocio",
+   "fieldtype": "Data",
+   "label": "Nombre del negocio",
+   "description": "Como lo llama el dueño en la entrevista."
+  },
+  {
+   "fieldname": "nombre_dueno",
+   "fieldtype": "Data",
+   "label": "Nombre del dueño",
+   "description": "Como se presentó en la entrevista."
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "label": "Estado",
+   "options": "En curso\nConfirmado",
+   "default": "En curso",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "entrevistado",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Entrevistado",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "confirmado_el",
+   "fieldtype": "Datetime",
+   "label": "Confirmado el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motor",
+   "fieldtype": "Data",
+   "label": "Quién hizo las preguntas",
+   "read_only": 1,
+   "description": "La IA (adaptando las preguntas) o el guion fijo si la IA no estaba activa."
+  },
+  {
+   "fieldname": "sec_mapa",
+   "fieldtype": "Section Break",
+   "label": "Así es la empresa"
+  },
+  {
+   "fieldname": "mapa",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Mapa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_conversacion",
+   "fieldtype": "Section Break",
+   "label": "Entrevista",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "respuestas",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Preguntas y respuestas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_ayuda",
+   "fieldtype": "Section Break",
+   "label": "Cómo le va a ayudar Lyra (lo que vio el dueño)"
+  },
+  {
+   "fieldname": "ayuda",
+   "fieldtype": "Code",
+   "label": "Ayuda",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_plan",
+   "fieldtype": "Section Break",
+   "label": "Módulos que recomienda Lyra (solo Equipo Lyra)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "recomendacion",
+   "fieldtype": "Code",
+   "label": "Recomendación de módulos",
+   "options": "JSON",
+   "read_only": 1,
+   "permlevel": 1,
+   "description": "Lo decide el Equipo Lyra; el dueño no lo ve."
+  }
+ ],
+ "field_order": [
+  "empresa",
+  "nombre_negocio",
+  "nombre_dueno",
+  "estado",
+  "entrevistado",
+  "column_break_1",
+  "confirmado_el",
+  "motor",
+  "sec_mapa",
+  "mapa",
+  "sec_conversacion",
+  "respuestas",
+  "sec_ayuda",
+  "ayuda",
+  "sec_plan",
+  "recomendacion"
+ ]
+}

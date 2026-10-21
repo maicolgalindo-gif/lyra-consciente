@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-19 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Sense",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Sense Evento",
+ "fields": [
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Usuario"
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Área",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "accion",
+   "fieldtype": "Select",
+   "label": "Acción",
+   "options": "Crear\nGuardar\nValidar\nCancelar",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "ref_doctype",
+   "fieldtype": "Link",
+   "options": "DocType",
+   "label": "Tipo de documento",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "ref_name",
+   "fieldtype": "Dynamic Link",
+   "options": "ref_doctype",
+   "label": "Documento",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "campos",
+   "fieldtype": "Small Text",
+   "label": "Campos que cambiaron"
+  }
+ ],
+ "field_order": [
+  "usuario",
+  "area",
+  "accion",
+  "ref_doctype",
+  "ref_name",
+  "campos"
+ ],
+ "autoname": "hash",
+ "in_create": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "description": "Eventos que mira Lyra. Se borran solos a los 90 días."
+}

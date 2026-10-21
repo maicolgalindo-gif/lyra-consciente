@@ -165,3 +165,82 @@
 .lyra-ia-menu .dropdown-item {
 	cursor: pointer;
 }
+
+// Lyra se da cuenta: aviso privado.
+.lyra-sense-aviso {
+	line-height: 1.4;
+	.acciones {
+		margin-top: 4px;
+		display: flex;
+		gap: 12px;
+		a {
+			cursor: pointer;
+			font-weight: 600;
+		}
+	}
+}
+.lyra-sense {
+	.tiles {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+	.tile {
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-md);
+		background: var(--card-bg);
+		padding: 12px 14px;
+		.t {
+			display: block;
+			color: var(--text-muted);
+			font-size: var(--text-sm);
+		}
+		b {
+			display: block;
+			font-size: 26px;
+			line-height: 1.2;
+			margin: 4px 0 2px;
+		}
+		small {
+			color: var(--text-muted);
+		}
+	}
+	.bloque {
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius-md);
+		background: var(--card-bg);
+		padding: 14px 16px;
+		margin-bottom: 14px;
+		h5 {
+			margin: 0 0 10px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			.btn {
+				margin-left: auto;
+			}
+		}
+		td.n,
+		th.n {
+			text-align: right;
+		}
+		.vacio {
+			color: var(--text-muted);
+			margin: 0;
+		}
+	}
+	.dos {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+		gap: 14px;
+	}
+	.chip {
+		font-size: 11px;
+		padding: 1px 8px;
+		border-radius: 999px;
+		&.Avisar { background: var(--bg-orange); color: var(--text-on-orange); }
+		&.Completar { background: var(--bg-green); color: var(--text-on-green); }
+		&.apagada { background: var(--bg-gray); color: var(--text-on-gray); }
+	}
+}
