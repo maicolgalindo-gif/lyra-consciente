@@ -244,3 +244,29 @@
 		&.apagada { background: var(--bg-gray); color: var(--text-on-gray); }
 	}
 }
+
+// Organigrama (page lyra-organigrama): sale de las entrevistas, no se dibuja a
+// mano. Linea llena = quien le reporta a quien; punteada = por donde pasa el
+// trabajo de verdad.
+.lyra-organigrama {
+	.intro { max-width: 760px; }
+	.lienzo-org { overflow-x: auto; margin: 14px 0 6px; }
+	.nodo-org {
+		rect { fill: var(--fg-color); stroke: var(--border-color); stroke-width: 1; }
+		.cargo { font-size: 13px; font-weight: 600; fill: var(--text-color); }
+		.gente { font-size: 11px; fill: var(--text-muted); }
+		&.vacio rect { fill: var(--subtle-fg); stroke-dasharray: 4 3; }
+		&.vacio .cargo { fill: var(--text-muted); }
+	}
+	.arista {
+		fill: none; stroke: var(--text-muted); stroke-width: 1.4;
+		&.entrega { stroke-dasharray: 5 4; opacity: .75; }
+	}
+	.punta { fill: var(--text-muted); }
+	.bloque-org { margin-top: 18px; }
+	.lista-flujo {
+		list-style: none; padding: 0; margin: 8px 0 0;
+		li { padding: 5px 0; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+		span { margin-left: 8px; }
+	}
+}

@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "creation": "2026-10-21 20:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-21 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Diagnostico",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Diagnostico Funcionario",
+ "autoname": "hash",
+ "title_field": "nombre_persona",
+ "track_changes": 1,
+ "description": "Cómo trabaja una persona: su día, su paso a paso y los papeles que usa. Al dueño solo le llega consolidado por área.",
+ "permissions": [
+  {
+   "role": "Equipo Lyra",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "All",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "if_owner": 1
+  }
+ ],
+ "fields": [
+  {
+   "fieldname": "empresa",
+   "fieldtype": "Data",
+   "label": "Empresa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "funcionario",
+   "fieldtype": "Link",
+   "label": "Funcionario",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nombre_persona",
+   "fieldtype": "Data",
+   "label": "Cómo se llama",
+   "read_only": 1
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "label": "Estado",
+   "options": "En curso\nConfirmado",
+   "default": "En curso"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cargo",
+   "fieldtype": "Data",
+   "label": "Cargo (clave)",
+   "read_only": 1,
+   "description": "Lo deduce Lyra de la primera respuesta y lo confirma la persona."
+  },
+  {
+   "fieldname": "cargo_nombre",
+   "fieldtype": "Data",
+   "label": "Cargo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Data",
+   "label": "Área",
+   "read_only": 1,
+   "description": "Por aquí se agrupa lo que ve el dueño. Nunca por persona."
+  },
+  {
+   "fieldname": "confirmado_el",
+   "fieldtype": "Datetime",
+   "label": "Confirmado el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motor",
+   "fieldtype": "Data",
+   "label": "Quién hizo las preguntas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_mapa",
+   "fieldtype": "Section Break",
+   "label": "Así trabaja"
+  },
+  {
+   "fieldname": "mapa",
+   "fieldtype": "Code",
+   "label": "Mapa",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_documentos",
+   "fieldtype": "Section Break",
+   "label": "Papeles que usa"
+  },
+  {
+   "fieldname": "documentos",
+   "fieldtype": "Code",
+   "label": "Documentos que mencionó",
+   "options": "JSON",
+   "read_only": 1,
+   "description": "Lo que dijo que tiene. Los archivos que compartió quedan adjuntos a este documento."
+  },
+  {
+   "fieldname": "sec_conversacion",
+   "fieldtype": "Section Break",
+   "label": "Entrevista"
+  },
+  {
+   "fieldname": "respuestas",
+   "fieldtype": "Code",
+   "label": "Preguntas y respuestas",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_cierre",
+   "fieldtype": "Section Break",
+   "label": "Lo que Lyra le dijo al final"
+  },
+  {
+   "fieldname": "cierre",
+   "fieldtype": "Code",
+   "label": "Cierre",
+   "options": "JSON",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "empresa",
+  "funcionario",
+  "nombre_persona",
+  "estado",
+  "column_break_1",
+  "cargo",
+  "cargo_nombre",
+  "area",
+  "confirmado_el",
+  "motor",
+  "sec_mapa",
+  "mapa",
+  "sec_documentos",
+  "documentos",
+  "sec_conversacion",
+  "respuestas",
+  "sec_cierre",
+  "cierre"
+ ]
+}

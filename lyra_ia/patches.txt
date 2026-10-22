@@ -1,6 +1,7 @@
 [pre_model_sync]
 lyra_ia.patches.crear_modulo_sense
 lyra_ia.patches.crear_modulo_diagnostico
+lyra_ia.patches.crear_rol_rrhh
 
 [post_model_sync]
 lyra_ia.patches.pasar_contexto_al_alma

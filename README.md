@@ -12,7 +12,10 @@ andando sin ellas.
 
 | Parte | Dónde | Qué hace |
 |---|---|---|
-| Diagnóstico | `diagnostico/`, página `/lyra` | El primer acercamiento: Lyra entrevista al dueño (primero a la persona, después la empresa), le muestra lo que entendió y le dice cómo lo va a ayudar. La recomendación de módulos queda aparte, solo para el Equipo Lyra |
+| Diagnóstico del dueño | `diagnostico/entrevista.py`, página `/lyra` | El primer acercamiento: Lyra entrevista al dueño (primero a la persona, después la empresa), le muestra lo que entendió y le dice cómo lo va a ayudar. La recomendación de módulos queda aparte, solo para el Equipo Lyra |
+| Diagnóstico de cada funcionario | `diagnostico/funcionario.py`, `cargos.py`, la misma `/lyra` | Lyra entra a toda la empresa: deduce el cargo de la primera respuesta, pregunta según el puesto (contabilidad, RR. HH., ventas…) y pide los formatos y manuales con los que se trabaja de verdad. Al dueño solo le llega el consolidado, por área y sin nombres |
+| Organigrama (solo Equipo Lyra) | `diagnostico/organigrama.py`, página `lyra-organigrama` | Herramienta nuestra, no del cliente: se arma solo con lo que la gente contó. De los traspasos («de quién recibo, a quién entrego») salen quién le reporta a quién y por dónde pasa el trabajo de verdad, que casi nunca es igual al cuadrito oficial. Con eso el equipo entiende la empresa y arma la recomendación |
+| Perfil profesional | `diagnostico/perfil.py` | La otra mitad, que no se cruza con la anterior: estudios, experiencia y qué quiere aprender. Lo ve la persona, y Recursos Humanos solo si ella lo permite. Al dueño, nunca |
 | Asistente y copiloto | `asistente.py`, `copiloto.py`, `herramientas*.py` | Chat dentro del ERP que consulta los módulos activos con los permisos del usuario; ayuda en los chats de WhatsApp y WAHA si esas apps están |
 | Lyra se da cuenta | `sense/`, página `lyra-sense` | En segundo plano: reglas de datos que faltan (avisa en privado o completa, con Deshacer), métricas por área (nunca por persona) y reporte semanal al dueño |
 | Clasificaciones | `clasificador.py` | Preguntas con el formato de Laya; hoy responde el modelo y cada respuesta queda en IA Clasificacion para entrenar a Laya más adelante |
@@ -84,13 +87,22 @@ Funciona y está probado en local, con DeepSeek:
 - Lyra se da cuenta: reglas, avisos privados con Deshacer, métricas por área y reporte semanal.
 - El Alma, que se llena sola al confirmar la entrevista y cada día.
 - El rol Equipo Lyra: el cliente no ve IA Ajustes, el Alma, los costos ni la recomendación de módulos.
+- Instalarla sola, en un sitio con solo Frappe y sin ERPNext: se instala, crea sus doctypes y su rol,
+  y la entrevista corre con el guion fijo aunque no haya clave de IA.
+- La entrevista a los funcionarios: Lyra deduce el cargo, lo confirma, pregunta según el puesto, recibe
+  los archivos que le comparten y al final le dice a la persona cómo la va a ayudar. Probado con
+  DeepSeek en contabilidad y en Recursos Humanos.
+- Quién ve qué: el dueño no ve las entrevistas con nombre ni ningún perfil profesional, solo el
+  consolidado por área; Recursos Humanos ve un perfil solo si esa persona lo permitió, y no lo puede
+  cambiar; cada quien ve lo suyo.
+- El organigrama que sale de las entrevistas, para el Equipo Lyra: los cargos, quién le reporta a
+  quién y por dónde pasa el trabajo, con la frase que justifica cada flecha.
 
 Hecho, pero sin probar de punta a punta:
 - La voz de ElevenLabs (falta probarla con una clave real).
-- Instalar la app en un sitio con solo Frappe, sin ERPNext.
 
 Pendiente:
-- Entrevistar a los funcionarios con el mismo estilo (primero la persona, después su trabajo).
+- Una pantalla para que el Equipo Lyra lea el consolidado por área (hoy se consulta por API).
 - Una pantalla para que el Equipo Lyra revise la recomendación de módulos y active las apps.
 - Los precios del proveedor en IA Ajustes, para ver el costo real de cada entrevista.
 - Laya: el clasificador local, para más adelante.
@@ -100,15 +112,21 @@ Pendiente:
 1. **IA Ajustes** (`/app/ia-ajustes`): proveedor, clave y modelo, activar, y **Probar conexión**.
    La clave se guarda cifrada en la base de datos, nunca en el código ni en `site_config`.
    Opcional: precios del proveedor (para ver costos) y la voz de ElevenLabs.
-2. El rol **Equipo Lyra** ve IA Ajustes, el Alma, IA Registro y la recomendación de módulos del
-   diagnóstico. El cliente, aunque sea System Manager, no los ve. Administrator lo tiene siempre; a
+2. El rol **Equipo Lyra** ve IA Ajustes, el Alma, IA Registro, el organigrama y la recomendación de
+   módulos del diagnóstico. El cliente, aunque sea System Manager, no los ve. Administrator lo tiene siempre; a
    otra persona del equipo se le asigna en su usuario.
-3. La entrevista al dueño se abre en `/lyra` (solo System Manager).
+3. La entrevista se abre en `/lyra`. A un System Manager le toca la de su empresa; a cualquier otra
+   persona, la de su trabajo. Con `/lyra?modo=trabajo` el dueño también cuenta cómo trabaja él.
+4. El rol **Recursos Humanos** solo sirve para ver los perfiles profesionales que su dueño haya
+   compartido. Sin ese permiso, no ve ninguno.
 
 ## Reglas de diseño
 
-- Lyra entrevista a cualquier persona igual: primero la conoce y acuerdan cómo se van a ayudar, y
-  después habla de la empresa o del trabajo. No hay un número fijo de preguntas: Lyra decide.
+- Lyra entrevista a cualquier persona igual: primero la conoce y después habla de la empresa o del
+  trabajo. No hay un número fijo de preguntas: Lyra decide.
+- Con el dueño, además, acuerdan cómo se van a ayudar, y al final ella le dice cómo lo va a ayudar.
+  **Con un funcionario, Lyra solo entrevista**: no le ofrece ayuda, no le promete nada y no le habla
+  de lo que ella hará. Al final solo le devuelve lo que entendió, para que lo corrija.
 - La IA nunca decide qué se recomienda ni escribe el Alma: eso sale de reglas y datos reales. La IA
   solo redacta.
 - Al dueño se le dice cómo lo va a ayudar Lyra, sin módulos ni nada que aprobar. Qué se activa lo
