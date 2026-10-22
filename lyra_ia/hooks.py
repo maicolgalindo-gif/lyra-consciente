@@ -52,6 +52,12 @@ doc_events = {
 	},
 }
 
+# El perfil profesional del funcionario no se protege solo con el doctype: estas
+# dos funciones las consulta Frappe en cada lectura, venga de donde venga (lista,
+# informe, API). Ver diagnostico/perfil.py.
+permission_query_conditions = {"Perfil Funcionario": "lyra_ia.diagnostico.perfil.condiciones"}
+has_permission = {"Perfil Funcionario": "lyra_ia.diagnostico.perfil.puede_ver"}
+
 scheduler_events = {
 	# El reporte semanal al dueno: se revisa cada hora si es el dia y la hora.
 	"hourly": ["lyra_ia.sense.metricas.tick"],

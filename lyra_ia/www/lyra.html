@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token }}">
-<title>Lyra conoce tu empresa</title>
+<title>{{ txt.titulo }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600&display=swap" rel="stylesheet">
@@ -197,6 +197,16 @@ a { color: var(--ultramar); }
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Los archivos que la persona le comparte a Lyra durante la entrevista. */
+.adjuntos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.adjuntos span {
+	display: inline-flex; align-items: center; gap: 6px; max-width: 260px;
+	padding: 5px 11px; border-radius: 999px; font-size: 13px;
+	background: color-mix(in srgb, var(--tinta) 7%, transparent); color: var(--tinta);
+}
+.adjuntos span b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-icono.clip[hidden] { display: none; }
+.btn-icono.clip.pide { color: var(--tinta); background: color-mix(in srgb, var(--tinta) 10%, transparent); }
 </style>
 </head>
 <body>
@@ -218,6 +228,10 @@ a { color: var(--ultramar); }
 			<label for="texto" class="sr" style="position:absolute;left:-9999px">Tu respuesta</label>
 			<textarea id="texto" rows="1" placeholder="Escribe aquí o toca el micrófono"></textarea>
 			<div class="botones">
+				<button class="btn-icono clip" id="adjuntar" title="Compartir un archivo" aria-label="Compartir un archivo" hidden>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.8 8.8a5 5 0 0 1-7.1-7.1l9-9a3.3 3.3 0 0 1 4.7 4.7l-9 9a1.7 1.7 0 0 1-2.4-2.4l8.3-8.3"/></svg>
+				</button>
+				<input type="file" id="archivo" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.txt,.odt,.ods">
 				<button class="btn-icono mic" id="mic" title="Responder hablando" aria-label="Responder hablando">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
 				</button>
@@ -227,18 +241,19 @@ a { color: var(--ultramar); }
 			</div>
 		</div>
 		<div class="sugerencias" id="sugerencias"></div>
+		<div class="adjuntos" id="adjuntos"></div>
 		<p class="ayuda">Enter para responder. Puedes tocar una de las opciones si te sirve.</p>
 		<p class="error" id="error" role="alert"></p>
 
 		<section class="revision" id="revision" aria-label="Revisión del mapa">
 			<div id="grupos"></div>
-			<button class="confirmar" id="confirmar">Confirmar mi empresa</button>
+			<button class="confirmar" id="confirmar">{{ txt.confirmar }}</button>
 			<button class="secundario" id="reiniciar">Empezar de nuevo</button>
 		</section>
 		<section class="plan" id="plan" aria-label="Plan que propone Lyra"></section>
 	</main>
 
-	<section class="lienzo" aria-label="Mapa de tu empresa">
+	<section class="lienzo" aria-label="{{ txt.mapa }}">
 		<canvas id="lienzo" aria-hidden="true"></canvas>
 		<ul id="mapa-texto" class="solo-lector" aria-live="polite"></ul>
 		<p class="pista">Arrastra para girar. Pasa el mouse por un tema para ver lo que me contaste.</p>
@@ -291,7 +306,7 @@ function cuadro(ahora) {
 window.lyraOrbe = (s) => {
 	estadoOrbe = s;
 	canvas.setAttribute("aria-label", { breathing: "Lyra te escucha", listening: "Lyra te está oyendo",
-		connecting: "Lyra está pensando", shaping: "Lyra arma tu mapa", weaving: "Lyra ya conoce tu empresa" }[s] || "Lyra");
+		connecting: "Lyra está pensando", shaping: "Lyra arma tu mapa", weaving: "{{ txt.listo }}" }[s] || "Lyra");
 	if (reducido) pintar(1.5);   // un cuadro fijo, sin animacion
 };
 if (reducido) pintar(1.5); else requestAnimationFrame(cuadro);
@@ -307,17 +322,50 @@ const lienzo = document.getElementById("lienzo");
 const lc = lienzo.getContext("2d");
 // Sobre el fondo porcelana: la luz es ultramar y el texto, tinta.
 const HIELO = [47, 69, 214], LUZ = [118, 136, 226], AMBAR = [222, 146, 40], BLANCO = [27, 42, 74], SUAVE = [74, 88, 120];
+const VIOLETA = [126, 92, 224];        // el nucleo, un poco mas calido que el hielo
 const FUENTE = getComputedStyle(document.body).fontFamily;
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a))})`;
 const TAU = Math.PI * 2;
 
-// Puntos de la esfera repartidos parejo (espiral de Fibonacci). El orden es al
-// azar para que se enciendan salteados y no por franjas.
+// Cuantas particulas aguanta este aparato. En un telefono la mitad se ve igual
+// de bien y no calienta la bateria; con el movimiento reducido bastan pocas.
+const CUANTAS = (() => {
+	if (reducido) return 700;
+	const area = window.innerWidth * window.innerHeight;
+	const movil = window.innerWidth < 900 || (navigator.hardwareConcurrency || 4) <= 4;
+	return Math.round(Math.max(650, Math.min(movil ? 1100 : 2600, area / 620)));
+})();
+
+// Tres capas, no una cascara: el nucleo da el volumen, la superficie dibuja la
+// forma y el polvo de afuera hace que la esfera respire en vez de recortarse.
+// Cada particula guarda sus coordenadas esfericas para poder derivar sola.
 const PUNTOS = (() => {
-	const n = 900, out = [], oro = Math.PI * (3 - Math.sqrt(5));
-	for (let i = 0; i < n; i++) {
-		const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), th = oro * i;
-		out.push({ x: Math.cos(th) * r, y, z: Math.sin(th) * r, orden: Math.random() });
+	const out = [], oro = Math.PI * (3 - Math.sqrt(5));
+	const capas = [
+		{ parte: 0.22, r0: 0.15, r1: 0.58, tam: 0.62, brillo: 0.5 },    // nucleo
+		{ parte: 0.62, r0: 0.93, r1: 1.0, tam: 1, brillo: 1 },          // superficie
+		{ parte: 0.16, r0: 1.03, r1: 1.28, tam: 0.5, brillo: 0.3 },     // polvo
+	];
+	let i = 0;
+	for (const capa of capas) {
+		const n = Math.round(CUANTAS * capa.parte);
+		for (let k = 0; k < n; k++, i++) {
+			// Fibonacci reparte parejo; la raiz cubica evita que el nucleo se
+			// amontone en el centro.
+			const y = 1 - (k / Math.max(1, n - 1)) * 2;
+			const radio = capa.r0 + (capa.r1 - capa.r0) * Math.cbrt(Math.random());
+			out.push({
+				phi: Math.acos(Math.max(-1, Math.min(1, y))),
+				theta: oro * i + Math.random() * 0.25,
+				radio,
+				tam: capa.tam * (0.55 + Math.random() * 0.9),
+				brillo: capa.brillo,
+				orden: Math.random(),                       // en que momento se enciende
+				deriva: (0.02 + Math.random() * 0.07) * (Math.random() < 0.5 ? -1 : 1),
+				fase: Math.random() * TAU,
+				chispa: Math.random() < 0.05,               // las que destellan de vez en cuando
+			});
+		}
 	}
 	return out;
 })();
@@ -337,17 +385,22 @@ let t = 0, ultimoMapa = performance.now();
 let giro = 0.6, inclinacion = -0.32, velGiro = 0, velInc = 0, arrastrando = null;
 let llenado = 0;                       // 0..1, se acerca a lo conocido
 const raton = { x: 0, y: 0, dentro: false };
-const satelites = {};                  // posicion en pantalla de cada tema (ultimoMapa cuadro)
+let paraX = 0, paraY = 0;              // el leve seguimiento del cursor
+const satelites = {};                  // posicion en pantalla de cada tema (ultimo cuadro)
 let destacado = null, destacadoHasta = 0;
+let bajoElCursor = null;               // el tema que tiene el cursor encima
 const rayos = [];                      // respuestas viajando hacia su tema
 const ondas = [];                      // anillos al llegar un dato
+const pulsos = [];                     // ondas de energia del nucleo
+let proximoPulso = 3;
 
 function medir() {
 	const r = lienzo.getBoundingClientRect();
 	W = r.width; H = r.height; escala = Math.min(2, window.devicePixelRatio || 1);
 	lienzo.width = W * escala; lienzo.height = H * escala;
 	cx = W / 2; cy = H / 2 - 6;
-	R = Math.max(64, Math.min(W * 0.17, H * 0.2));
+	// Mas presencia que antes, pero sin comerse el aire de alrededor.
+	R = Math.max(62, Math.min(W * 0.19, H * 0.22));
 }
 
 // Rotar (giro en y, inclinacion en x) y proyectar con perspectiva.
@@ -357,7 +410,7 @@ function proyectar(x, y, z) {
 	const ci = Math.cos(inclinacion), si = Math.sin(inclinacion);
 	const y1 = y * ci - z1 * si, z2 = y * si + z1 * ci;
 	const f = 7 / (7 - z2);
-	return { x: cx + x1 * R * f, y: cy + y1 * R * f, z: z2, f };
+	return { x: cx + paraX + x1 * R * f, y: cy + paraY + y1 * R * f, z: z2, f };
 }
 
 // Punto de una orbita: circulo en el plano xz, inclinado y girado.
@@ -373,13 +426,13 @@ function enOrbita(o, ang, radio) {
 // En que parte de la conversacion va (sin conteos: no hay un numero fijo de preguntas).
 function faseDe(estado) {
 	const tema = estado.siguiente && estado.siguiente.tema;
-	return tema === "persona" || tema === "acuerdo" ? "Conociéndote" : "Conociendo tu empresa";
+	return tema === "persona" || tema === "acuerdo" ? "Conociéndote" : "{{ txt.fase }}";
 }
 
 function actualizar(estado, nuevos) {
 	const antes = modelo;
 	modelo = {
-		empresa: estado.empresa || "Tu empresa", temas: estado.temas, mapa: estado.mapa,
+		empresa: estado.empresa || "{{ txt.centro }}", temas: estado.temas, mapa: estado.mapa,
 		actual: estado.completo ? null : estado.siguiente && estado.siguiente.tema,
 		completo: !!estado.completo || estado.estado === "Confirmado",
 		fase: faseDe(estado),
@@ -389,6 +442,7 @@ function actualizar(estado, nuevos) {
 			if (!datos || !datos.length) continue;
 			rayos.push({ tema, nacio: t });
 			destacado = tema; destacadoHasta = t + 7;
+			pulsos.push({ nacio: t });          // el nucleo acusa recibo
 		}
 	}
 	if (reducido) dibujar();
@@ -406,6 +460,27 @@ function partir(texto, ancho) {
 	return lineas.slice(0, 3);
 }
 
+// La nube de particulas, ya proyectada y ordenada de atras hacia adelante.
+function nube(barrido) {
+	const pts = [];
+	for (const p of PUNTOS) {
+		// Deriva propia: cada una gira a su ritmo alrededor del eje. Suave y
+		// constante, nunca caotico.
+		const th = p.theta + (reducido ? 0 : t * p.deriva);
+		const sp = Math.sin(p.phi);
+		// Respiracion: la superficie sube y baja un pelo, como si pensara.
+		const r = p.radio * (1 + (reducido ? 0 : Math.sin(t * 0.8 + p.fase) * 0.012));
+		const q = proyectar(Math.cos(th) * sp * r, Math.cos(p.phi) * r, Math.sin(th) * sp * r);
+		q.p = p;
+		// La onda que recorre la esfera de polo a polo.
+		q.cerca = Math.max(0, 1 - Math.abs(Math.cos(p.phi) - barrido) * 5);
+		q.lit = p.orden < llenado;
+		pts.push(q);
+	}
+	pts.sort((a, b) => a.z - b.z);
+	return pts;
+}
+
 function dibujar() {
 	if (!W) return;
 	lc.setTransform(escala, 0, 0, escala, 0, 0);
@@ -417,76 +492,130 @@ function dibujar() {
 	llenado += (meta - llenado) * (reducido ? 1 : 0.03);
 
 	// halo detras de la esfera
-	const halo = lc.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 2.3);
-	halo.addColorStop(0, rgba(LUZ, 0.16 + llenado * 0.12)); halo.addColorStop(0.5, rgba(LUZ, 0.05)); halo.addColorStop(1, rgba(LUZ, 0));
-	lc.fillStyle = halo; lc.beginPath(); lc.arc(cx, cy, R * 2.3, 0, TAU); lc.fill();
+	const halo = lc.createRadialGradient(cx + paraX, cy + paraY, R * 0.2, cx + paraX, cy + paraY, R * 2.3);
+	halo.addColorStop(0, rgba(LUZ, 0.17 + llenado * 0.1)); halo.addColorStop(0.42, rgba(LUZ, 0.04)); halo.addColorStop(1, rgba(LUZ, 0));
+	lc.fillStyle = halo; lc.beginPath(); lc.arc(cx + paraX, cy + paraY, R * 2.3, 0, TAU); lc.fill();
 
-	// orbitas (la parte de atras primero, tenue)
+	// orbitas: hilos finisimos, mas claros al frente que al fondo
+	const foco0 = destacadoActual();
+	// Los temas NO van sobre su orbita 3D: proyectadas, las inclinaciones los
+	// amontonan en un lado y los nombres se pisan o caen sobre la esfera. Van
+	// repartidos parejo en una elipse de PANTALLA, que gira despacio; de la
+	// orbita real solo se toma la profundidad, que acerca o aleja el tema y le
+	// da su brillo. Las orbitas 3D siguen dibujandose detras, como fondo.
+	const ax = Math.min(W * 0.33, R * 2.1), ay = Math.min(H * 0.38, R * 1.78);
 	const sats = temas.map((tema, i) => {
 		const o = ORBITAS[i % ORBITAS.length];
-		const radio = 1.85 + (i % 2) * 0.18;
-		// se descuenta el nodo para que queden repartidos parejo alrededor
-		const ang = i * (TAU / temas.length) + o.nodo + (reducido ? 0 : t * VEL_ORBITA * (modelo.completo ? 0.5 : 1));
-		const p = proyectar(...enOrbita(o, ang, radio));
-		return { tema, o, radio, p, i };
+		const radio = 1.72 + (i % 2) * 0.18;
+		const giroOrbita = reducido ? 0 : t * VEL_ORBITA * (modelo.completo ? 0.5 : 1);
+		const p3 = proyectar(...enOrbita(o, i * (TAU / temas.length) - o.nodo + giroOrbita, radio));
+		const prof3 = Math.max(0, Math.min(1, (p3.z + 2.15) / 4.3));
+		const a = i * (TAU / temas.length) - Math.PI / 2 + (reducido ? 0 : t * 0.05);
+		const k = 0.74 + prof3 * 0.26;
+		const p = { x: cx + paraX + Math.cos(a) * ax * k, y: cy + paraY + Math.sin(a) * ay * k, z: p3.z, f: p3.f };
+		return { tema, o, radio, p, i, ang: i * (TAU / temas.length) - o.nodo + giroOrbita };
 	});
 	for (const s of sats) {
 		const actual = s.tema.clave === modelo.actual, dolor = s.tema.clave === "dolores";
+		const resalta = s.tema.clave === foco0;
 		const col = dolor && s.tema.listo ? AMBAR : HIELO;
-		lc.lineWidth = actual ? 1.4 : 1;
+		lc.lineWidth = resalta ? 1.1 : 0.6;
 		let prev = null;
-		for (let k = 0; k <= 96; k++) {
-			const q = proyectar(...enOrbita(s.o, (k / 96) * TAU, s.radio));
+		for (let k = 0; k <= 110; k++) {
+			const q = proyectar(...enOrbita(s.o, (k / 110) * TAU, s.radio));
 			if (prev) {
-				const a = (s.tema.listo ? 0.22 : 0.1) * (q.z > 0 ? 1 : 0.45) + (actual ? 0.25 : 0);
+				const a = (s.tema.listo ? 0.14 : 0.07) * (q.z > 0 ? 1 : 0.35)
+					+ (actual ? 0.1 : 0) + (resalta ? 0.22 : 0);
 				lc.strokeStyle = rgba(col, a);
+				lc.beginPath(); lc.moveTo(prev.x, prev.y); lc.lineTo(q.x, q.y); lc.stroke();
+			}
+			prev = q;
+		}
+		// un nodo de luz recorriendo la orbita, por detras del tema
+		if (!reducido) {
+			const n = proyectar(...enOrbita(s.o, s.ang - 1.1 - Math.sin(t * 0.3 + s.i) * 0.5, s.radio));
+			const aa = 0.5 * (n.z > 0 ? 1 : 0.3);
+			lc.fillStyle = rgba(col, aa * 0.55);
+			lc.beginPath(); lc.arc(n.x, n.y, 1.8 * n.f, 0, TAU); lc.fill();
+		}
+	}
+
+	// la nube de particulas
+	const barrido = reducido ? 0.2 : Math.sin(t * 0.55);
+	const pts = nube(barrido);
+	let previo = null;
+	for (const q of pts) {
+		const p = q.p;
+		const frente = (q.z + 1.6) / 3.2;                 // 0 atras, 1 adelante
+		const chisp = p.chispa && !reducido ? Math.max(0, Math.sin(t * 1.3 + p.fase)) ** 12 : 0;
+		let a = (q.lit ? 0.3 + frente * 0.6 : 0.07 + frente * 0.16) * p.brillo
+			+ q.cerca * 0.3 + chisp * 0.5;
+		const color = q.cerca > 0.45 ? [24, 38, 160] : q.lit ? HIELO : LUZ;
+		lc.fillStyle = rgba(color, a);
+		const r = (q.lit ? 1.35 : 1) * p.tam * q.f * (0.55 + frente * 0.8) + chisp * 1.2;
+		lc.beginPath(); lc.arc(q.x, q.y, r, 0, TAU); lc.fill();
+		// Hilos entre vecinas: en la espiral, dos seguidas quedan al lado. Solo
+		// entre las encendidas y las de adelante, o se convierte en una maraña.
+		if (!reducido && q.lit && previo && previo.lit && q.z > 0.2) {
+			const d = Math.hypot(q.x - previo.x, q.y - previo.y);
+			if (d < R * 0.3) {
+				lc.strokeStyle = rgba(HIELO, 0.07 * frente);
+				lc.lineWidth = 0.5;
+				lc.beginPath(); lc.moveTo(previo.x, previo.y); lc.lineTo(q.x, q.y); lc.stroke();
+			}
+		}
+		previo = q;
+	}
+
+	// anillos de latitud: son los que hacen que la nube se lea como esfera
+	for (const lat of [-0.62, -0.32, 0, 0.32, 0.62]) {
+		const rr = Math.sqrt(1 - lat * lat);
+		let prev = null;
+		for (let k = 0; k <= 84; k++) {
+			const a = (k / 84) * TAU;
+			const q = proyectar(Math.cos(a) * rr, lat, Math.sin(a) * rr);
+			if (prev) {
+				lc.strokeStyle = rgba(HIELO, (q.z > 0 ? 0.1 : 0.03) * (0.5 + llenado * 0.5));
+				lc.lineWidth = 0.6;
 				lc.beginPath(); lc.moveTo(prev.x, prev.y); lc.lineTo(q.x, q.y); lc.stroke();
 			}
 			prev = q;
 		}
 	}
 
-	// esfera: puntos encendidos segun lo que Lyra conoce, y un barrido de luz
-	const barrido = reducido ? 0.2 : Math.sin(t * 0.7);
-	const pts = PUNTOS.map((p) => ({ ...proyectar(p.x, p.y, p.z), lit: p.orden < llenado, y0: p.y }));
-	pts.sort((a, b) => a.z - b.z);
-	for (const p of pts) {
-		const frente = (p.z + 1) / 2;
-		const cerca = Math.max(0, 1 - Math.abs(p.y0 - barrido) * 6);
-		const a = (p.lit ? 0.35 + frente * 0.65 : 0.08 + frente * 0.18) + cerca * 0.35;
-		lc.fillStyle = rgba(p.lit ? (cerca > 0.4 ? [24, 38, 160] : HIELO) : LUZ, a);
-		const r = (p.lit ? 1.6 : 1.1) * p.f * (0.7 + frente * 0.7);
-		lc.beginPath(); lc.arc(p.x, p.y, r, 0, TAU); lc.fill();
+	// nucleo: un resplandor violeta azulado, nunca una bola maciza
+	const nucleo = lc.createRadialGradient(cx + paraX, cy + paraY, 0, cx + paraX, cy + paraY, R * 0.5);
+	nucleo.addColorStop(0, rgba(VIOLETA, 0.3 + llenado * 0.24));
+	nucleo.addColorStop(0.4, rgba(VIOLETA, 0.1 + llenado * 0.08));
+	nucleo.addColorStop(1, rgba(LUZ, 0));
+	lc.fillStyle = nucleo; lc.beginPath(); lc.arc(cx + paraX, cy + paraY, R * 0.5, 0, TAU); lc.fill();
+
+	// ondas de energia que salen del nucleo al entender algo nuevo
+	for (let i = pulsos.length - 1; i >= 0; i--) {
+		const k = (t - pulsos[i].nacio) / 1.8;
+		if (k >= 1) { pulsos.splice(i, 1); continue; }
+		lc.strokeStyle = rgba(VIOLETA, 0.3 * (1 - k));
+		lc.lineWidth = 1.2 * (1 - k) + 0.3;
+		lc.beginPath(); lc.arc(cx + paraX, cy + paraY, R * (0.35 + k * 1.1), 0, TAU); lc.stroke();
 	}
-	// anillos de latitud, como un holograma
-	for (const lat of [-0.5, 0, 0.5]) {
-		const rr = Math.sqrt(1 - lat * lat);
-		let prev = null;
-		for (let k = 0; k <= 72; k++) {
-			const a = (k / 72) * TAU;
-			const q = proyectar(Math.cos(a) * rr, lat, Math.sin(a) * rr);
-			if (prev) { lc.strokeStyle = rgba(HIELO, q.z > 0 ? 0.16 : 0.05); lc.lineWidth = 1; lc.beginPath(); lc.moveTo(prev.x, prev.y); lc.lineTo(q.x, q.y); lc.stroke(); }
-			prev = q;
-		}
-	}
-	// nucleo
-	const nucleo = lc.createRadialGradient(cx, cy, 0, cx, cy, R * 0.55);
-	nucleo.addColorStop(0, rgba(LUZ, 0.1 + llenado * 0.22)); nucleo.addColorStop(1, rgba(LUZ, 0));
-	lc.fillStyle = nucleo; lc.beginPath(); lc.arc(cx, cy, R * 0.55, 0, TAU); lc.fill();
 
 	// nombre de la empresa, debajo
 	lc.textAlign = "center";
 	lc.font = `600 16px ${FUENTE}`; lc.fillStyle = rgba(BLANCO, 0.95);
-	lc.fillText(modelo.empresa, cx, cy + R * 1.18 + 8);
+	// Debajo del anillo de temas, pero nunca encima de la pista de abajo
+	// («Arrastra para girar…»), que vive a 16px del borde del lienzo.
+	const yPie = Math.min(cy + ay + 38, H - 74);
+	lc.fillText(modelo.empresa, cx, yPie);
 	lc.font = `400 13px ${FUENTE}`; lc.fillStyle = rgba(SUAVE, 0.9);
-	lc.fillText(modelo.completo ? "Lyra ya te conoce" : modelo.fase, cx, cy + R * 1.18 + 28);
+	lc.fillText(modelo.completo ? "Lyra ya te conoce" : modelo.fase, cx, yPie + 20);
 
 	// satelites, de atras hacia adelante
-	let cercano = null, dmin = 26;
+	let cercano = null, dmin = 30;
 	sats.sort((a, b) => a.p.z - b.p.z);
 	for (const s of sats) {
 		const { tema, p } = s;
 		const actual = tema.clave === modelo.actual, dolor = tema.clave === "dolores";
+		const resalta = tema.clave === foco0;
 		const col = dolor && tema.listo ? AMBAR : HIELO;
 		const datos = modelo.mapa[tema.clave] || [];
 		const prof = 0.45 + ((p.z + 2.1) / 4.2) * 0.55;
@@ -497,9 +626,9 @@ function dibujar() {
 		}
 		if (tema.listo) {
 			const g = lc.createRadialGradient(p.x, p.y, 0, p.x, p.y, 26 * p.f);
-			g.addColorStop(0, rgba(col, 0.55 * prof)); g.addColorStop(1, rgba(col, 0));
+			g.addColorStop(0, rgba(col, (resalta ? 0.7 : 0.5) * prof)); g.addColorStop(1, rgba(col, 0));
 			lc.fillStyle = g; lc.beginPath(); lc.arc(p.x, p.y, 26 * p.f, 0, TAU); lc.fill();
-			lc.fillStyle = rgba(col, prof); lc.beginPath(); lc.arc(p.x, p.y, 4.5 * p.f, 0, TAU); lc.fill();
+			lc.fillStyle = rgba(col, prof); lc.beginPath(); lc.arc(p.x, p.y, (resalta ? 5.4 : 4.5) * p.f, 0, TAU); lc.fill();
 			// lunas: una por dato
 			datos.slice(0, 8).forEach((_, j) => {
 				const a = (reducido ? 0 : t * 1.2) + j * (TAU / Math.min(8, datos.length));
@@ -515,15 +644,23 @@ function dibujar() {
 			lc.strokeStyle = rgba(HIELO, 0.7 * (1 - pulso)); lc.lineWidth = 1.5;
 			lc.beginPath(); lc.arc(p.x, p.y, (9 + pulso * 18) * p.f, 0, TAU); lc.stroke();
 		}
-		lc.font = `${actual ? 600 : 500} 13.5px ${FUENTE}`;
-		// el nombre va hacia afuera, salvo que no quepa en el borde
-		const anchoNombre = lc.measureText(tema.nombre).width + 20;
+		// el nombre, colgado de un hilo fino con su punto de luz
+		lc.font = `${actual || resalta ? 600 : 500} 13.5px ${FUENTE}`;
+		const anchoNombre = lc.measureText(tema.nombre).width + 34;
 		let aDerecha = p.x >= cx;
 		if (aDerecha && p.x + anchoNombre > W - 8) aDerecha = false;
 		if (!aDerecha && p.x - anchoNombre < 8) aDerecha = true;
+		const lado = aDerecha ? 1 : -1;
+		const hx = p.x + lado * 13 * p.f, fx = p.x + lado * 26 * p.f;
+		lc.strokeStyle = rgba(col, (tema.listo ? 0.4 : 0.22) * prof + (resalta ? 0.3 : 0));
+		lc.lineWidth = 0.8;
+		lc.beginPath(); lc.moveTo(hx, p.y); lc.lineTo(fx, p.y); lc.stroke();
+		lc.fillStyle = rgba(col, (tema.listo ? 0.8 : 0.4) * prof);
+		lc.beginPath(); lc.arc(fx, p.y, resalta ? 2.4 : 1.7, 0, TAU); lc.fill();
 		lc.textAlign = aDerecha ? "left" : "right";
-		lc.fillStyle = actual ? rgba(BLANCO, 1) : rgba(dolor && tema.listo ? AMBAR : HIELO, tema.listo ? 0.9 * prof : 0.55 * prof);
-		lc.fillText(tema.nombre, p.x + (aDerecha ? 14 : -14) * p.f, p.y + 4);
+		lc.fillStyle = actual || resalta ? rgba(BLANCO, 1)
+			: rgba(dolor && tema.listo ? AMBAR : HIELO, tema.listo ? 0.9 * prof : 0.55 * prof);
+		lc.fillText(tema.nombre, fx + lado * 8, p.y + 4);
 	}
 
 	// respuestas viajando: entran por la izquierda y siguen hasta su tema
@@ -551,9 +688,15 @@ function dibujar() {
 	}
 
 	// el panel del tema: al pasar el mouse, o un momento despues de un dato nuevo
+	bajoElCursor = cercano;
 	const foco = cercano || (t < destacadoHasta ? destacado : null);
 	lienzo.style.cursor = arrastrando ? "grabbing" : cercano ? "pointer" : "grab";
 	if (foco) panel(foco);
+}
+
+// Que tema esta resaltado ahora: el del cursor, o el del ultimo dato que llego.
+function destacadoActual() {
+	return bajoElCursor || (t < destacadoHasta ? destacado : null);
 }
 
 function panel(clave) {
@@ -596,6 +739,13 @@ function cuadroMapa(ahora) {
 		velGiro *= 0.94; velInc *= 0.94;
 		inclinacion += (-0.32 - inclinacion) * 0.01;   // vuelve despacio a su angulo
 	}
+	// La esfera acompaña al cursor apenas unos pixeles: se siente viva sin marear.
+	const metaX = raton.dentro ? (raton.x - W / 2) * 0.012 : 0;
+	const metaY = raton.dentro ? (raton.y - H / 2) * 0.012 : 0;
+	paraX += (metaX - paraX) * 0.05; paraY += (metaY - paraY) * 0.05;
+	// Cada tanto, el nucleo manda una onda: Lyra sigue pensando aunque nadie escriba.
+	proximoPulso -= dt;
+	if (proximoPulso <= 0) { pulsos.push({ nacio: t }); proximoPulso = 7 + Math.random() * 6; }
 	dibujar();
 	requestAnimationFrame(cuadroMapa);
 }
@@ -618,7 +768,7 @@ lienzo.addEventListener("pointermove", (e) => {
 const soltar = () => { arrastrando = null; };
 lienzo.addEventListener("pointerup", soltar);
 lienzo.addEventListener("pointercancel", soltar);
-lienzo.addEventListener("pointerleave", () => { raton.dentro = false; if (reducido) dibujar(); });
+lienzo.addEventListener("pointerleave", () => { raton.dentro = false; bajoElCursor = null; if (reducido) dibujar(); });
 window.addEventListener("resize", () => { medir(); if (reducido) dibujar(); });
 
 window.lyraMapa = {
@@ -638,8 +788,8 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 </script>
 <script>
 (() => {
-	const API = "/api/method/lyra_ia.diagnostico.entrevista.";
-	const API_PLAN = "/api/method/lyra_ia.diagnostico.recomendacion.";
+	const API = "/api/method/{{ api }}.";
+	const API_PLAN = "/api/method/{{ api_plan }}.";
 	const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 	const $ = (id) => document.getElementById(id);
 	const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -685,7 +835,7 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 	// ------------------------------------------------------------ avance
 	function pintarAvance() {
 		const fase = estado.completo || estado.estado === "Confirmado" ? "Ya te conozco"
-			: ["persona", "acuerdo"].includes(estado.siguiente && estado.siguiente.tema) ? "Conociéndote" : "Conociendo tu empresa";
+			: ["persona", "acuerdo"].includes(estado.siguiente && estado.siguiente.tema) ? "Conociéndote" : "{{ txt.fase }}";
 		$("avance").innerHTML = `<b class="latido"></b><span>${esc(fase)}</span>`;
 	}
 
@@ -749,7 +899,7 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 			return;
 		}
 		if (estado.completo) {
-			mostrarPregunta(`Gracias${estado.nombre_usuario ? ", " + estado.nombre_usuario : ""}. Esto es lo que entendí de tu empresa.`,
+			mostrarPregunta(`Gracias${estado.nombre_usuario ? ", " + estado.nombre_usuario : ""}. {{ txt.entendi }}`,
 				"Quita lo que no esté bien o agrega lo que falte. Cuando lo confirmes, te digo cómo te voy a ayudar.");
 			pintarRevision();
 			return;
@@ -757,6 +907,7 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 		const s = estado.siguiente;
 		mostrarPregunta(s.pregunta, estado.saludo || "");
 		$("sugerencias").innerHTML = (s.sugerencias || []).map((x) => `<button type="button">${esc(x)}</button>`).join("");
+		pintarAdjuntos();
 		$("texto").value = "";
 		ajustarAlto();
 		actualizarBoton();
@@ -871,11 +1022,51 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 		setTimeout(() => v.remove(), 1000);
 	}
 
+	// ------------------------------------------------------- documentos
+	// Lyra pide los formatos y manuales con los que se trabaja de verdad. El
+	// archivo queda adjunto a la entrevista (privado), no se manda a la IA.
+	function pintarAdjuntos() {
+		const caja = $("adjuntos");
+		// Solo en la entrevista de trabajo: la del dueño no pide documentos.
+		const puedeAdjuntar = estado && estado.archivos !== undefined && !estado.completo;
+		$("adjuntar").hidden = !puedeAdjuntar;
+		$("adjuntar").classList.toggle("pide", !!(estado && estado.pedir_documento));
+		caja.innerHTML = ((estado && estado.archivos) || []).map((a) =>
+			`<span title="${esc(a)}"><b>${esc(a)}</b></span>`).join("");
+	}
+
+	$("adjuntar").addEventListener("click", () => $("archivo").click());
+	$("archivo").addEventListener("change", async (e) => {
+		const archivos = [...e.target.files];
+		e.target.value = "";
+		if (!archivos.length || !estado) return;
+		$("error").textContent = "";
+		for (const f of archivos) {
+			const cuerpo = new FormData();
+			cuerpo.append("file", f, f.name);
+			cuerpo.append("doctype", "Diagnostico Funcionario");
+			cuerpo.append("docname", estado.name);
+			cuerpo.append("is_private", "1");
+			try {
+				const r = await fetch("/api/method/upload_file", {
+					method: "POST", headers: { "X-Frappe-CSRF-Token": CSRF, Accept: "application/json" },
+					body: cuerpo, credentials: "same-origin",
+				});
+				if (!r.ok) throw new Error("no se pudo subir");
+				estado.archivos = (estado.archivos || []).concat(f.name);
+			} catch (err) {
+				$("error").textContent = `No pude guardar ${f.name}. Inténtalo de nuevo.`;
+			}
+		}
+		pintarAdjuntos();
+	});
+
 	let enviando = false;
 	async function responder() {
 		const valor = texto.value.trim();
 		if (!valor || enviando || !estado || estado.completo) return;
 		enviando = true;
+		pararMic();
 		$("error").textContent = "";
 		const s = estado.siguiente;
 		viajar(valor, s.tema);
@@ -903,23 +1094,73 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 	}
 
 	// ------------------------------------------------------- hablar / oir
+	// El navegador corta la escucha solo: en cada pausa del habla (si no se le
+	// pide lo contrario) y, aun pidiendoselo, cada tanto por su cuenta. Para quien
+	// esta contando algo eso es que Lyra «dejo de oirlo» a mitad de frase. Asi que
+	// aqui se vuelve a abrir enseguida, y por fuera se siente una sola escucha
+	// larga que solo termina cuando la persona la termina.
 	const Reconocer = window.SpeechRecognition || window.webkitSpeechRecognition;
-	let oyendo = null;
+	let oyendo = null;              // la escucha viva
+	let pedidoParar = false;        // la paro la persona (o el envio)
+	let dichoFinal = "";            // lo que ya quedo firme, entre reinicios
+	let baseTexto = "";             // lo que habia escrito antes de hablar
+	let reinicios = 0, ultimaVoz = 0;
+	const SILENCIO_MAX = 180000;    // 3 min sin decir nada: se apaga sola
+	const REINICIOS_MAX = 60;       // freno por si el navegador falla en bucle
 	if (!Reconocer) $("mic").style.display = "none";
-	$("mic").addEventListener("click", () => {
-		if (oyendo) { oyendo.stop(); return; }
+
+	function pintarMic(activo) {
+		$("mic").classList.toggle("activo", activo);
+		$("mic").setAttribute("aria-pressed", String(activo));
+		$("mic").title = activo ? "Dejar de escuchar" : "Responder hablando";
+	}
+
+	function pararMic() {
+		pedidoParar = true;
+		if (oyendo) { try { oyendo.stop(); } catch (e) {} }
+	}
+
+	function arrancarMic() {
 		const r = new Reconocer();
-		r.lang = "es-CO"; r.interimResults = true; r.continuous = false;
-		const base = texto.value.trim();
+		r.lang = "es-CO";
+		r.interimResults = true;
+		r.continuous = true;        // no cortar en cada pausa
+		r.maxAlternatives = 1;
 		r.onresult = (e) => {
-			const dicho = Array.from(e.results).map((x) => x[0].transcript).join(" ");
-			texto.value = (base ? base + " " : "") + dicho;
+			let enVuelo = "";
+			for (let i = e.resultIndex; i < e.results.length; i++) {
+				const tramo = (e.results[i][0].transcript || "").trim();
+				if (!tramo) continue;
+				if (e.results[i].isFinal) dichoFinal += (dichoFinal ? " " : "") + tramo;
+				else enVuelo += (enVuelo ? " " : "") + tramo;
+			}
+			ultimaVoz = Date.now();
+			reinicios = 0;          // hubo voz: la racha de reintentos se olvida
+			texto.value = [baseTexto, dichoFinal, enVuelo].filter(Boolean).join(" ");
 			ajustarAlto(); actualizarBoton();
 		};
-		r.onend = () => { oyendo = null; $("mic").classList.remove("activo"); orbe("breathing"); texto.focus(); };
-		r.onerror = () => { $("error").textContent = "No pude escucharte. Revisa el permiso del micrófono o escribe tu respuesta."; };
-		oyendo = r; r.start();
-		$("mic").classList.add("activo"); orbe("listening");
+		r.onspeechstart = () => { ultimaVoz = Date.now(); };
+		r.onerror = (e) => {
+			const fatal = { "not-allowed": "No me diste permiso para el micrófono. Puedes escribir tu respuesta.",
+							"service-not-allowed": "Este navegador no me deja escuchar. Puedes escribir tu respuesta.",
+							"audio-capture": "No encontré micrófono. Puedes escribir tu respuesta." }[e.error];
+			if (fatal) { pedidoParar = true; $("error").textContent = fatal; }
+			// «no-speech», «aborted» y «network» se reintentan solos en onend.
+		};
+		r.onend = () => {
+			const sigue = !pedidoParar && Date.now() - ultimaVoz < SILENCIO_MAX && reinicios < REINICIOS_MAX;
+			if (sigue) { reinicios++; setTimeout(arrancarMic, 120); return; }
+			oyendo = null; pintarMic(false); orbe("breathing"); texto.focus();
+		};
+		try { r.start(); } catch (err) { oyendo = null; pintarMic(false); return; }
+		oyendo = r; pintarMic(true); orbe("listening");
+	}
+
+	$("mic").addEventListener("click", () => {
+		if (oyendo) { pararMic(); return; }
+		baseTexto = texto.value.trim();
+		dichoFinal = ""; reinicios = 0; ultimaVoz = Date.now(); pedidoParar = false;
+		arrancarMic();
 	});
 	$("voz").addEventListener("click", () => {
 		leerEnVoz = !leerEnVoz;
