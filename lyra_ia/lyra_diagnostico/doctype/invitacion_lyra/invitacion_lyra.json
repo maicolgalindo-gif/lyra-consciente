@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "creation": "2026-10-23 18:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-23 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra Diagnostico",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Invitacion Lyra",
+ "autoname": "hash",
+ "title_field": "nombre_persona",
+ "track_changes": 1,
+ "description": "El enlace con el que una persona entra a hablar con Lyra sin tener que crearse una cuenta ni recordar contraseñas. Es personal y se vence.",
+ "permissions": [
+  {
+   "role": "Equipo Lyra",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1
+  }
+ ],
+ "fields": [
+  {
+   "fieldname": "nombre_persona",
+   "fieldtype": "Data",
+   "label": "Cómo se llama",
+   "reqd": 1,
+   "description": "El nombre con el que Lyra la va a saludar."
+  },
+  {
+   "fieldname": "correo",
+   "fieldtype": "Data",
+   "label": "Correo",
+   "options": "Email",
+   "description": "Si no tiene, Lyra le arma uno interno: solo sirve para identificarla."
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "label": "Estado",
+   "options": "Sin usar\nUsada\nVencida",
+   "default": "Sin usar",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vence_el",
+   "fieldtype": "Datetime",
+   "label": "Vence el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "usada_el",
+   "fieldtype": "Datetime",
+   "label": "La usó el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_enlace",
+   "fieldtype": "Section Break",
+   "label": "El enlace"
+  },
+  {
+   "fieldname": "enlace",
+   "fieldtype": "Small Text",
+   "label": "Enlace para mandarle",
+   "read_only": 1,
+   "description": "Esto es lo que se le manda por WhatsApp. Es personal: no sirve para nadie más."
+  },
+  {
+   "fieldname": "sec_tecnico",
+   "fieldtype": "Section Break",
+   "label": "Por dentro"
+  },
+  {
+   "fieldname": "clave",
+   "fieldtype": "Data",
+   "label": "Clave",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "label": "Usuario",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "nombre_persona",
+  "correo",
+  "column_break_1",
+  "estado",
+  "vence_el",
+  "usada_el",
+  "sec_enlace",
+  "enlace",
+  "sec_tecnico",
+  "clave",
+  "usuario"
+ ]
+}

@@ -189,9 +189,20 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Invitaciones",
+   "link_count": 0,
+   "link_to": "Invitacion Lyra",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-10-23 13:00:00.000000",
+ "modified": "2026-10-23 18:45:00.000000",
  "modified_by": "Administrator",
  "module": "Lyra IA",
  "name": "Lyra IA",
@@ -213,6 +224,13 @@
    "doc_view": "",
    "stats_filter": "[]",
    "format": ""
+  },
+  {
+   "label": "Invitar a alguien",
+   "type": "DocType",
+   "link_to": "Invitacion Lyra",
+   "color": "Green",
+   "doc_view": "List"
   },
   {
    "label": "Organigrama",

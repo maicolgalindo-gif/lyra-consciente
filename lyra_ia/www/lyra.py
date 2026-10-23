@@ -48,6 +48,16 @@ TRABAJO = {
 
 
 def get_context(context):
+	# Quien llega con su enlace personal entra sin cuenta ni contraseña: el
+	# enlace es lo que la identifica (ver diagnostico/invitacion.py).
+	clave = (frappe.form_dict.get("i") or "").strip()
+	if clave:
+		from lyra_ia.diagnostico.invitacion import entrar
+
+		if not entrar(clave):
+			context.no_breadcrumbs = True
+			frappe.local.flags.redirect_location = "/lyra-enlace-vencido"
+			raise frappe.Redirect
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=/lyra"
 		raise frappe.Redirect
