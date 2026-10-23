@@ -5,6 +5,8 @@ a mano. El alma se llena sola con lo que Lyra va conociendo:
 
 - la empresa (nombre, NIT, pais);
 - la entrevista del dueno, ya confirmada (Diagnostico Empresa), y como Lyra le dijo que lo ayudaria;
+- como trabaja cada area por dentro, segun lo que conto su propia gente en las
+  entrevistas: sin nombres y con el mismo minimo de personas que las metricas;
 - lo que se vende (los productos mas vendidos de los ultimos 90 dias);
 - el tamano de la base de clientes.
 
@@ -83,6 +85,59 @@ def _del_diagnostico(fuentes: list) -> list[str]:
 	return lineas
 
 
+def _de_como_trabajan(fuentes: list) -> list[str]:
+	"""Como funciona la empresa por dentro, segun lo que conto su propia gente.
+
+	Sale de las entrevistas a los funcionarios, pero NUNCA con nombres: por area
+	y con el mismo minimo de personas que las metricas, porque un area de una o
+	dos personas delata a quien lo conto. Sin esto, Lyra sabe que vende la
+	empresa pero no como trabaja, que es justo lo que le contaron."""
+	if not frappe.db.exists("DocType", "Diagnostico Funcionario"):
+		return []
+	filas = frappe.get_all("Diagnostico Funcionario", filters={"estado": "Confirmado"},
+						   fields=["area", "cargo_nombre", "mapa"])
+	if not filas:
+		return []
+	try:
+		minimo = int(frappe.db.get_single_value("Sense Ajustes", "min_personas_area") or 3)
+	except Exception:
+		minimo = 3
+	areas: dict = {}
+	for f in filas:
+		caja = areas.setdefault(f.area or _("Otras áreas"), {"personas": 0, "cargos": set(), "proceso": [], "dolores": [], "herramientas": []})
+		caja["personas"] += 1
+		if f.cargo_nombre:
+			caja["cargos"].add(f.cargo_nombre)
+		mapa = frappe.parse_json(f.mapa or "{}") or {}
+		for clave in ("proceso", "dolores", "herramientas"):
+			caja[clave].extend(x for x in (mapa.get(clave) or []) if x)
+	lineas = [_("Cómo trabaja la empresa por dentro, según su propia gente:")]
+	sueltas: dict = {"dolores": [], "herramientas": []}
+	for nombre, c in sorted(areas.items(), key=lambda kv: -kv[1]["personas"]):
+		if c["personas"] < minimo:
+			# Area pequena: sus pasos y sus cargos dirian quien lo conto.
+			for clave in sueltas:
+				sueltas[clave].extend(c[clave])
+			continue
+		partes = [_("{0} ({1} personas)").format(nombre, c["personas"])]
+		if c["proceso"]:
+			partes.append(_("así trabajan: {0}").format("; ".join(dict.fromkeys(c["proceso"]))[:400]))
+		if c["herramientas"]:
+			partes.append(_("con qué: {0}").format("; ".join(dict.fromkeys(c["herramientas"]))[:200]))
+		if c["dolores"]:
+			partes.append(_("lo que les cuesta: {0}").format("; ".join(dict.fromkeys(c["dolores"]))[:300]))
+		lineas.append("- " + partes[0] + ". " + ". ".join(x[0].upper() + x[1:] for x in partes[1:]) + ".")
+	if any(sueltas.values()):
+		trozos = []
+		if sueltas["dolores"]:
+			trozos.append(_("lo que les cuesta: {0}").format("; ".join(dict.fromkeys(sueltas["dolores"]))[:300]))
+		if sueltas["herramientas"]:
+			trozos.append(_("con qué: {0}").format("; ".join(dict.fromkeys(sueltas["herramientas"]))[:200]))
+		lineas.append("- " + _("Otras áreas") + ". " + ". ".join(x[0].upper() + x[1:] for x in trozos) + ".")
+	fuentes.append(_("Entrevistas a {0} personas de la empresa").format(len(filas)))
+	return lineas if len(lineas) > 1 else []
+
+
 def _de_lo_que_vende(fuentes: list) -> list[str]:
 	from lyra_ia.entorno import hay_doctype
 
@@ -122,7 +177,7 @@ def componer() -> tuple[str, list[str]]:
 	"""El alma en texto, y de donde salio cada parte."""
 	fuentes: list[str] = []
 	lineas: list[str] = []
-	for parte in (_de_la_empresa, _del_diagnostico, _de_lo_que_vende, _de_los_clientes):
+	for parte in (_de_la_empresa, _del_diagnostico, _de_como_trabajan, _de_lo_que_vende, _de_los_clientes):
 		try:
 			bloque = parte(fuentes)
 		except Exception:

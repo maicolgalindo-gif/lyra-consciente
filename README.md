@@ -25,7 +25,7 @@ Lo que comparten:
 | Pieza | Qué hace |
 |---|---|
 | `cerebro.py` | La única puerta a la IA (formato OpenAI: DeepSeek, OpenRouter, Together…). Límite de gasto y registro de cada llamada en IA Registro |
-| `alma.py` | Lo que Lyra sabe de la empresa. Se llena sola (entrevista confirmada, empresa, ventas, clientes) y la IA la recibe como contexto |
+| `alma.py` | Lo que Lyra sabe de la empresa. Se llena sola (entrevista del dueño, cómo trabaja cada área según su propia gente, empresa, ventas, clientes) y la IA la recibe como contexto. Lo de las áreas va sin nombres y con el mismo mínimo de personas que las métricas |
 | `voz.py` | La voz de Lyra con VoiceStudio, que corre en la misma máquina: no cobra y el texto no sale de ahí. Si falla, la voz del navegador |
 | `privacidad.py` | Oculta correos, teléfonos y documentos antes de enviarlos a la IA |
 | `entorno.py` | Qué apps hay instaladas y cómo se llama la empresa, en un solo lugar |

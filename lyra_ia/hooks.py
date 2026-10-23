@@ -43,8 +43,11 @@ doc_events = {
 		"on_submit": "lyra_ia.sense.captura.capturar",
 		"on_cancel": "lyra_ia.sense.captura.capturar",
 	},
-	# El alma aprende de cada diagnostico confirmado (ver alma.py).
+	# El alma aprende de cada diagnostico confirmado (ver alma.py): del dueno, y
+	# tambien de cada persona que termina de contar como trabaja. Sin esto Lyra
+	# recogia las entrevistas y despues no las usaba para nada.
 	"Diagnostico Empresa": {"on_update": "lyra_ia.alma.al_confirmar_diagnostico"},
+	"Diagnostico Funcionario": {"on_update": "lyra_ia.alma.al_confirmar_diagnostico"},
 	"Lyra Alma": {"on_update": "lyra_ia.alma.al_guardar_notas"},
 	"Sense Regla": {
 		"on_update": "lyra_ia.sense.reglas.limpiar_cache",
