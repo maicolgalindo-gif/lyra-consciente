@@ -15,6 +15,7 @@ andando sin ellas.
 | Diagnóstico del dueño | `diagnostico/entrevista.py`, página `/lyra` | El primer acercamiento: Lyra entrevista al dueño (primero a la persona, después la empresa), le muestra lo que entendió y le dice cómo lo va a ayudar. La recomendación de módulos queda aparte, solo para el Equipo Lyra |
 | Invitar a la gente (solo Equipo Lyra) | `diagnostico/invitacion.py`, doctype `Invitacion Lyra` | Un enlace personal por persona, para mandarle por WhatsApp. Entra sin cuenta ni contraseña: el enlace la identifica, que es lo que Lyra necesita para saber de quién guarda lo que cuenta. Lo crea el Equipo Lyra al desplegar; la empresa no invita a nadie, ni el dueño. Es personal, se vence a los 7 días y no da permiso de nada más |
 | Diagnóstico de cada funcionario | `diagnostico/funcionario.py`, `cargos.py`, la misma `/lyra` | Lyra entra a toda la empresa: deduce el cargo de la primera respuesta, pregunta según el puesto (contabilidad, RR. HH., ventas…) y pide los formatos y manuales con los que se trabaja de verdad. Al dueño solo le llega el consolidado, por área y sin nombres |
+| Qué activarle (solo Equipo Lyra) | `diagnostico/recomendacion.py`, página `lyra-recomendacion` | La mesa donde el equipo lee lo que Lyra recomienda después de la entrevista —cada parte con el porqué pegado a lo que el dueño contó— y decide qué se activa. La decisión queda con fecha y firma. El dueño no entra: a él se le dijo cómo lo va a ayudar, sin módulos |
 | Organigrama (solo Equipo Lyra) | `diagnostico/organigrama.py`, página `lyra-organigrama` | Herramienta nuestra, no del cliente: se arma solo con lo que la gente contó. De los traspasos («de quién recibo, a quién entrego») salen quién le reporta a quién y por dónde pasa el trabajo de verdad, que casi nunca es igual al cuadrito oficial. Con eso el equipo entiende la empresa y arma la recomendación |
 | Perfil profesional | `diagnostico/perfil.py` | La otra mitad, que no se cruza con la anterior: cuando Lyra ya entiende cómo trabaja, la misma conversación sigue con la persona (qué estudió, dónde ha trabajado, qué quiere aprender). Se guarda en su propio documento: ni el mapa del trabajo ni su transcripción lo tocan. Lo ven la persona y el Equipo Lyra; de la empresa, nadie. Se puede corregir, no borrar: es el contexto con el que Lyra la acompaña |
 | Asistente y copiloto | `asistente.py`, `copiloto.py`, `herramientas*.py` | Chat dentro del ERP que consulta los módulos activos con los permisos del usuario; ayuda en los chats de WhatsApp y WAHA si esas apps están. El asistente sabe con quién habla: usa lo que esa persona contó en su entrevista, para no hacérselo repetir |
@@ -103,6 +104,7 @@ Hecho, pero sin probar de punta a punta:
 
 Pendiente:
 - Una pantalla para que el Equipo Lyra lea el consolidado por área (hoy se consulta por API).
+- Activar Lyra para toda la gente de una, leyendo la lista de empleados, en vez de uno por uno.
 - Una pantalla para que el Equipo Lyra revise la recomendación de módulos y active las apps.
 - Los precios del proveedor en IA Ajustes, para ver el costo real de cada entrevista.
 - Laya: el clasificador local, para más adelante.

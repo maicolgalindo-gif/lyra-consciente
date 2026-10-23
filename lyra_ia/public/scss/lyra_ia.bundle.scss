@@ -270,3 +270,28 @@
 		span { margin-left: 8px; }
 	}
 }
+
+// Qué activarle a esta empresa (page lyra-recomendacion): la mesa del Equipo
+// Lyra. Cada parte con el porqué pegado a lo que el dueno conto.
+.lyra-recomendacion {
+	max-width: 760px;
+	.resumen { max-width: 700px; }
+	.parte {
+		display: flex; gap: 11px; align-items: flex-start; font-weight: 400;
+		padding: 13px 14px; margin: 9px 0; border-radius: 10px;
+		border: 1px solid var(--border-color); background: var(--fg-color); cursor: pointer;
+		&:hover { border-color: var(--primary); }
+		&.duele { border-left: 3px solid var(--orange-400, #f0a04b); }
+		input { margin: 3px 0 0; }
+		.cuerpo { display: flex; flex-direction: column; gap: 3px; }
+		.para-que { color: var(--text-muted); font-size: 13px; }
+		.porque { color: var(--text-color); font-size: 13px; font-style: italic; }
+	}
+	.marca {
+		display: inline-block; margin-left: 7px; font-size: 11px; padding: 1px 8px; border-radius: 999px;
+		background: var(--bg-gray); color: var(--text-on-gray);
+		&.ok { background: var(--bg-green); color: var(--text-on-green); }
+		&.falta { background: var(--bg-orange); color: var(--text-on-orange); }
+	}
+	.pie { margin-top: 18px; }
+}

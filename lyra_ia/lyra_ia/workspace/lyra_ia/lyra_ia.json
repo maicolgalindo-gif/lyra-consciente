@@ -183,6 +183,17 @@
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Qué activarle",
+   "link_count": 0,
+   "link_to": "lyra-recomendacion",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Entrevistas de trabajo",
    "link_count": 0,
    "link_to": "Diagnostico Funcionario",
@@ -202,7 +213,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-23 18:45:00.000000",
+ "modified": "2026-10-23 20:15:00.000000",
  "modified_by": "Administrator",
  "module": "Lyra IA",
  "name": "Lyra IA",
@@ -224,6 +235,13 @@
    "doc_view": "",
    "stats_filter": "[]",
    "format": ""
+  },
+  {
+   "label": "Qué activarle",
+   "type": "Page",
+   "link_to": "lyra-recomendacion",
+   "color": "Blue",
+   "doc_view": ""
   },
   {
    "label": "Invitar a alguien",

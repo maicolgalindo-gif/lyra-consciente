@@ -273,3 +273,70 @@ def plan(name: str, rehacer: int = 0) -> dict:
 	doc.recomendacion = json.dumps({"partes": partes}, ensure_ascii=False)
 	doc.save(ignore_permissions=True)
 	return ayuda
+
+
+# --------------------------------------------- la mesa del Equipo Lyra
+# Hasta aquí la recomendación se calculaba y se guardaba, pero no había dónde
+# leerla: el diagnóstico terminaba en un campo JSON que nadie abría. Esto es la
+# mesa donde el equipo la revisa y decide qué se activa. Decide el equipo, no
+# Lyra y no el dueño.
+def _estado_apps(partes: list[dict]) -> list[dict]:
+	instaladas = set(frappe.get_installed_apps())
+	salida = []
+	for p in partes:
+		base = next((x for x in PARTES if x["clave"] == p["clave"]), None)
+		apps = base["apps"] if base else []
+		salida.append({**p, "apps": apps,
+					   "faltan": [a for a in apps if a not in instaladas]})
+	return salida
+
+
+@frappe.whitelist()
+def para_el_equipo(name: str | None = None) -> dict:
+	"""La recomendación de un diagnóstico, con lo ya decidido y lo que falta instalar."""
+	frappe.only_for("Equipo Lyra")
+	if not name:
+		name = frappe.db.get_value(DT, {"estado": "Confirmado"}, "name", order_by="confirmado_el desc")
+	if not name:
+		return {"hay": False, "diagnosticos": []}
+	doc = frappe.get_doc(DT, name)
+	guardado = json.loads(doc.recomendacion or "null") or {}
+	partes = guardado.get("partes")
+	if not partes:
+		partes = proponer(json.loads(doc.mapa or "{}"), json.loads(doc.respuestas or "[]"))
+	decision = guardado.get("decision") or {}
+	for p in partes:
+		p["elegida"] = decision.get(p["clave"], p.get("elegida", False))
+	return {
+		"hay": True,
+		"name": doc.name,
+		"empresa": doc.nombre_negocio or doc.empresa,
+		"dueno": doc.nombre_dueno,
+		"confirmado_el": str(doc.confirmado_el or ""),
+		"resumen": _resumen(doc.nombre_negocio or doc.empresa, json.loads(doc.mapa or "{}")),
+		"partes": _estado_apps(partes),
+		"decidido_el": guardado.get("decidido_el"),
+		"decidido_por": guardado.get("decidido_por"),
+		"diagnosticos": frappe.get_all(DT, filters={"estado": "Confirmado"},
+									   fields=["name", "nombre_negocio", "confirmado_el"],
+									   order_by="confirmado_el desc", limit=20),
+	}
+
+
+@frappe.whitelist(methods=["POST"])
+def decidir(name: str, elegidas: str | list) -> dict:
+	"""Guarda qué se activa. La decisión es del equipo y queda con fecha y firma."""
+	frappe.only_for("Equipo Lyra")
+	doc = frappe.get_doc(DT, name)
+	claves = frappe.parse_json(elegidas) if isinstance(elegidas, str) else (elegidas or [])
+	guardado = json.loads(doc.recomendacion or "null") or {}
+	partes = guardado.get("partes") or proponer(json.loads(doc.mapa or "{}"), json.loads(doc.respuestas or "[]"))
+	for p in partes:
+		p["elegida"] = p["clave"] in claves
+	guardado.update({"partes": partes, "decision": {p["clave"]: p["elegida"] for p in partes},
+					 "decidido_el": str(now_datetime()), "decidido_por": frappe.session.user})
+	doc.recomendacion = json.dumps(guardado, ensure_ascii=False)
+	doc.save(ignore_permissions=True)
+	elegidas_nombres = [p["nombre"] for p in partes if p["elegida"]]
+	return {"ok": True, "elegidas": elegidas_nombres,
+			"faltan_instalar": sorted({a for p in _estado_apps(partes) if p["elegida"] for a in p["faltan"]})}
