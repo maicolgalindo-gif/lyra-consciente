@@ -16,10 +16,13 @@ import frappe
 # Modulos tecnicos: lo que pasa ahi no es trabajo de nadie.
 MODULOS_IGNORADOS = {
 	"Core", "Desk", "Email", "Integrations", "Custom", "Website", "Printing", "Automation", "Social",
-	"Data Migration", "Geo", "Contacts Settings", "Lyra Sense", "Lyra IA",
+	"Data Migration", "Geo", "Contacts Settings", "Lyra Sense", "Lyra IA", "Lyra Diagnostico",
 }
 DOCTYPES_IGNORADOS = {
-	"WhatsApp Message", "WhatsApp Notification Log", "WAHA Mensaje", "Version", "Comment", "File",
+	# Los que escribe un programa solo (mensajes que entran, campañas que corren,
+	# chats que se sincronizan): no es nadie trabajando, y llenaban el registro.
+	"WhatsApp Message", "WhatsApp Notification Log", "WAHA Mensaje", "WAHA Campana", "WAHA Chat",
+	"WAHA Campana Envio", "Process Subscription", "Version", "Comment", "File",
 	"Notification Log", "Communication", "ToDo", "Activity Log", "Access Log", "Error Log", "Scheduled Job Log",
 	"Route History", "DocShare", "Deleted Document", "Email Queue", "Prepared Report", "Integration Request",
 	"User Settings", "Session Default Settings", "Dashboard Settings",

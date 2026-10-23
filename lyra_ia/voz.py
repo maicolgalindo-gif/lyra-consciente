@@ -1,12 +1,20 @@
-"""La voz de Lyra: convierte su texto en audio con ElevenLabs.
+"""La voz de Lyra: convierte su texto en audio con VoiceStudio.
 
-La clave vive cifrada en IA Ajustes (solo la ve el Equipo Lyra) y nunca sale al
-navegador: el navegador pide el audio aqui y aqui se habla con ElevenLabs. Las
-frases ya dichas se guardan en cache una semana, asi que repetir una pregunta
-(o recargar la pagina) no se vuelve a cobrar. Cada audio nuevo queda en IA
-Registro con sus caracteres, que es lo que ElevenLabs cobra.
+VoiceStudio corre en la misma maquina que Lyra, asi que no cobra por caracter y
+el texto no sale de ahi. Habla el formato de OpenAI (POST {url}/v1/audio/speech),
+de modo que cualquier otro servidor con ese mismo formato sirve cambiando la
+direccion en IA Ajustes.
 
-Si la voz no esta activa o ElevenLabs falla, el navegador usa su propia voz.
+Un aviso que cuesta caro descubrir solo: Lyra corre dentro del contenedor, asi
+que «localhost» ahi es el contenedor, no tu maquina. La direccion que sirve es
+http://host.docker.internal:3900.
+
+Sintetizar en local tarda mas que llamar a la nube (unos segundos por frase), por
+eso la espera es larga y las frases ya dichas se guardan en cache una semana:
+repetir una pregunta o recargar la pagina no vuelve a sintetizar. Cada audio
+nuevo queda en IA Registro con sus caracteres.
+
+Si la voz no esta activa o VoiceStudio no responde, el navegador usa su propia voz.
 """
 
 from __future__ import annotations
@@ -20,8 +28,10 @@ import requests
 from frappe import _
 from frappe.utils import now_datetime
 
-URL = "https://api.elevenlabs.io/v1/text-to-speech/{voz}?output_format=mp3_44100_128"
 MAX_CARACTERES = 700
+# Sintetizar en la maquina no es inmediato: una frase corta puede tardar varios
+# segundos, bastante mas que una llamada a la nube.
+ESPERA = 180
 
 
 def _ajustes():
@@ -30,28 +40,51 @@ def _ajustes():
 
 def lista() -> bool:
 	a = _ajustes()
-	return bool(a.voz_activa and a.voz_id and a.get_password("voz_clave", raise_exception=False))
+	return bool(a.voz_activa and a.voz_id and a.get("voz_url"))
+
+
+def _cuerpo(a, texto: str) -> dict:
+	"""Lo que se le pide a VoiceStudio.
+
+	num_step es lo que de verdad manda en la espera: cada paso es una pasada del
+	modelo sobre la frase. Con 16 (lo que trae de fabrica) una pregunta tarda unos
+	11 segundos y la persona ya leyo el texto hace rato; con 8 baja a unos 4. Si
+	la voz suena rara, se sube en IA Ajustes."""
+	cuerpo = {"input": texto, "voice": a.voz_id, "response_format": "mp3"}
+	pasos = int(a.get("voz_pasos") or 0)
+	if pasos > 0:
+		cuerpo["num_step"] = max(1, min(128, pasos))
+	return cuerpo
 
 
 def _sintetizar(texto: str, funcion: str) -> bytes:
 	a = _ajustes()
-	clave = a.get_password("voz_clave", raise_exception=False)
-	modelo = a.voz_modelo or "eleven_multilingual_v2"
+	url = (a.get("voz_url") or "").rstrip("/") + "/v1/audio/speech"
 	inicio = time.monotonic()
-	registro = {"doctype": "IA Registro", "funcion": funcion, "usuario": frappe.session.user, "proveedor": "ElevenLabs",
-				"modelo": f"{modelo} / {a.voz_id}", "tokens_entrada": len(texto), "tokens_salida": 0, "costo": 0}
-	try:
-		r = requests.post(URL.format(voz=a.voz_id), headers={"xi-api-key": clave, "Accept": "audio/mpeg"},
-						  json={"text": texto, "model_id": modelo, "language_code": "es"} if "flash" in modelo or "turbo" in modelo
-						  else {"text": texto, "model_id": modelo}, timeout=30)
-	except requests.RequestException:
-		_registrar(registro, inicio, _("No se pudo conectar con ElevenLabs."))
-		raise frappe.ValidationError(_("No se pudo conectar con ElevenLabs."))
-	if r.status_code != 200:
-		detalle = r.text[:200]
-		mensaje = {401: _("ElevenLabs rechazó la clave (401). Revísala en IA Ajustes."),
-				   404: _("ElevenLabs no encontró esa voz (404). Revisa el ID de la voz en IA Ajustes.")}.get(
-			r.status_code, _("ElevenLabs respondió {0}: {1}").format(r.status_code, detalle))
+	registro = {"doctype": "IA Registro", "funcion": funcion, "usuario": frappe.session.user,
+				"proveedor": "VoiceStudio", "modelo": a.voz_id, "tokens_entrada": len(texto),
+				"tokens_salida": 0, "costo": 0}
+	cuerpo = _cuerpo(a, texto)
+	cabeceras = {"Content-Type": "application/json", "X-OmniVoice-Client-Id": "lyra_ia"}
+	r = None
+	for intento in range(2):
+		try:
+			r = requests.post(url, headers=cabeceras, json=cuerpo, timeout=ESPERA)
+		except requests.RequestException:
+			mensaje = _("No se pudo conectar con VoiceStudio en {0}. ¿Está abierto?").format(a.get("voz_url"))
+			_registrar(registro, inicio, mensaje)
+			raise frappe.ValidationError(mensaje)
+		# Si ya hay otra frase sintetizandose, VoiceStudio rechaza esta y dice que
+		# se puede repetir tal cual en unos segundos: pasa cuando dos pantallas
+		# piden voz a la vez. Se reintenta una sola vez.
+		if r.status_code in (429, 503) or (r.status_code >= 400 and "saturat" in (r.text or "").lower()):
+			if intento == 0:
+				time.sleep(5)
+				continue
+		break
+	if r.status_code != 200 or not r.content:
+		mensaje = {404: _("VoiceStudio no encontró esa voz (404). Revisa el ID de la voz en IA Ajustes.")}.get(
+			r.status_code, _("VoiceStudio respondió {0}: {1}").format(r.status_code, r.text[:200]))
 		_registrar(registro, inicio, mensaje)
 		raise frappe.ValidationError(mensaje)
 	_registrar(registro, inicio)
@@ -65,6 +98,22 @@ def _registrar(registro: dict, inicio: float, error: str | None = None) -> None:
 		frappe.db.commit()
 
 
+@frappe.whitelist()
+def voces() -> list[dict]:
+	"""Las voces que tiene VoiceStudio, para elegir una en IA Ajustes."""
+	frappe.only_for("Equipo Lyra")
+	a = _ajustes()
+	url = (a.get("voz_url") or "").rstrip("/") + "/v1/audio/voices"
+	try:
+		r = requests.get(url, headers={"X-OmniVoice-Client-Id": "lyra_ia"}, timeout=20)
+		datos = r.json() if r.status_code == 200 else {}
+	except Exception:
+		frappe.throw(_("No se pudo conectar con VoiceStudio en {0}. ¿Está abierto?").format(a.get("voz_url")))
+	lista_voces = datos.get("voices") or datos.get("data") or []
+	return [{"id": v.get("voice_id") or v.get("id"), "nombre": v.get("name") or v.get("id")}
+			for v in lista_voces if isinstance(v, dict)]
+
+
 # ------------------------------------------------------------------- API
 @frappe.whitelist(methods=["POST"])
 def hablar(texto: str) -> dict:
@@ -75,7 +124,7 @@ def hablar(texto: str) -> dict:
 	if not texto or not lista():
 		return {"audio": None}
 	a = _ajustes()
-	clave_cache = "lyra_voz:" + hashlib.sha1(f"{a.voz_id}|{a.voz_modelo}|{texto}".encode()).hexdigest()
+	clave_cache = "lyra_voz:" + hashlib.sha1(f"{a.voz_id}|{a.get('voz_pasos')}|{texto}".encode()).hexdigest()
 	audio = frappe.cache.get_value(clave_cache, expires=True)
 	if not audio:
 		audio = base64.b64encode(_sintetizar(texto, "voz")).decode()

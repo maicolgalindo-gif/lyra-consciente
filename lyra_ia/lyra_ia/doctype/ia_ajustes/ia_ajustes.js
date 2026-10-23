@@ -23,6 +23,27 @@ frappe.ui.form.on("IA Ajustes", {
 			frappe.show_alert({ message: frappe.utils.escape_html(m.estado || ""), indicator: m.ok ? "green" : "red" }, 8);
 			frm.reload_doc();
 		});
+		// Las voces las pone VoiceStudio: se piden y se elige una, en vez de copiar
+		// el identificador a mano.
+		frm.add_custom_button("Ver voces", async () => {
+			if (frm.is_dirty()) await frm.save();
+			const r = await frappe.call({ method: "lyra_ia.voz.voces", freeze: true, freeze_message: "Preguntándole a VoiceStudio…" });
+			const voces = r.message || [];
+			if (!voces.length) return frappe.msgprint("VoiceStudio no tiene voces todavía.");
+			const d = new frappe.ui.Dialog({
+				title: "Voces de VoiceStudio",
+				fields: [{ fieldname: "voz", fieldtype: "Select", label: "Voz", reqd: 1,
+					options: voces.map((v) => `${v.nombre} (${v.id})`).join("\n") }],
+				primary_action_label: "Usar esta voz",
+				primary_action(valores) {
+					const id = (valores.voz.match(/\(([^)]+)\)$/) || [])[1];
+					frm.set_value("voz_id", id);
+					d.hide();
+					frappe.show_alert({ message: "Guarda y toca «Probar voz».", indicator: "blue" });
+				},
+			});
+			d.show();
+		});
 		frm.add_custom_button("Ir al asistente", () => frappe.set_route("asistente-ia"));
 		frappe.call({ method: "lyra_ia.cerebro.resumen_gasto" }).then((r) => {
 			const g = r.message || {};

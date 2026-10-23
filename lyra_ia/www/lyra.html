@@ -197,6 +197,17 @@ a { color: var(--ultramar); }
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after { animation: none !important; transition: none !important; }
 }
+/* Mientras Lyra prepara su voz: tres puntos, para que la espera no parezca que
+   la pantalla se quedó pegada. */
+.esperando-voz { display: inline-flex; gap: 10px; align-items: center; height: 1em; }
+.esperando-voz i {
+	width: 10px; height: 10px; border-radius: 50%;
+	background: color-mix(in srgb, var(--ultramar) 55%, transparent);
+	animation: latir 1.3s ease-in-out infinite;
+}
+.esperando-voz i:nth-child(2) { animation-delay: .18s; }
+.esperando-voz i:nth-child(3) { animation-delay: .36s; }
+
 /* Los archivos que la persona le comparte a Lyra durante la entrevista. */
 .adjuntos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .adjuntos span {
@@ -841,11 +852,9 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 
 	// ---------------------------------------------------------- pregunta
 	let escribiendo = null;
-	function mostrarPregunta(texto, contexto) {
+	function escribir(texto) {
 		const h = $("pregunta");
 		clearInterval(escribiendo);
-		$("contexto").textContent = contexto || "";
-		hablar(texto);
 		if (reducido) { h.textContent = texto; return; }
 		h.textContent = "";
 		let i = 0;
@@ -855,13 +864,62 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 		}, 18);
 	}
 
-	// La voz de Lyra: la de ElevenLabs si el equipo la activo (el audio lo pide el
-	// servidor, la clave no sale de alli); si no, o si falla, la del navegador.
-	let audioActual = null, turnoVoz = 0;
+	// Con la voz encendida, la pregunta NO se escribe hasta que Lyra pueda decirla:
+	// si no, aparece escrita y la voz llega diez segundos después, como un doblaje
+	// mal hecho. Mientras tanto no se deja la pantalla muda: van tres puntos
+	// latiendo, que es lo que le dice a la persona que Lyra está por hablar.
+	//
+	// El tope solo existe para que una voz caída no deje la pregunta escondida
+	// para siempre: pasado ese rato, se escribe igual.
+	const TOPE_VOZ = 25000;
+	function mostrarPregunta(texto, contexto) {
+		clearInterval(escribiendo);
+		$("contexto").textContent = contexto || "";
+		if (!leerEnVoz || !texto || !estado || !estado.voz) {
+			hablar(texto);
+			escribir(texto);
+			return;
+		}
+		$("pregunta").innerHTML = '<span class="esperando-voz" aria-label="Lyra está preparando su voz"><i></i><i></i><i></i></span>';
+		let escrito = false;
+		const soltar = () => { if (!escrito) { escrito = true; escribir(texto); } };
+		const aTiempo = setTimeout(soltar, TOPE_VOZ);
+		hablar(texto, () => { clearTimeout(aTiempo); soltar(); }).then(soltar, soltar);
+	}
+
+	// La voz de Lyra: la de VoiceStudio si esta activa (el audio lo arma el
+	// servidor); si no, o si falla, la del navegador.
+	let audioActual = null, turnoVoz = 0, audioEnEspera = null;
 	function callar() {
 		turnoVoz++;
 		if (audioActual) { audioActual.pause(); audioActual = null; }
+		audioEnEspera = null;
 		if ("speechSynthesis" in window) speechSynthesis.cancel();
+	}
+
+	// Ningun navegador deja sonar audio hasta que la persona toca algo en la
+	// pagina. Si Lyra habla antes de ese primer toque, el audio se bloquea y
+	// antes se quedaba muda sin decir por que: ahora queda guardado y suena en
+	// cuanto toque cualquier cosa.
+	function alPrimerToque() {
+		if (!audioEnEspera) return;
+		const a = audioEnEspera;
+		audioEnEspera = null;
+		$("error").textContent = "";
+		a.play().catch(() => {});
+	}
+	for (const ev of ["pointerdown", "keydown", "touchstart"]) window.addEventListener(ev, alPrimerToque);
+
+	function sonar(audio) {
+		audioActual = audio;
+		return audio.play().catch((e) => {
+			if (e && e.name === "NotAllowedError") {
+				audioEnEspera = audio;
+				$("error").textContent = "Toca cualquier parte de la pantalla para oírme.";
+				return;   // el texto se suelta igual: lo hace quien llamó
+			}
+			throw e;
+		});
 	}
 	function vozNavegador(texto) {
 		if (!("speechSynthesis" in window)) return;
@@ -869,21 +927,35 @@ if (!reducido) requestAnimationFrame(cuadroMapa); else dibujar();
 		u.lang = "es-CO"; u.rate = 1.02;
 		speechSynthesis.speak(u);
 	}
-	async function hablar(texto) {
+	async function hablar(texto, alEmpezar) {
 		callar();
-		if (!leerEnVoz || !texto) return;
+		const avisar = () => { if (alEmpezar) { const f = alEmpezar; alEmpezar = null; f(); } };
+		if (!leerEnVoz || !texto) { avisar(); return; }
 		const turno = turnoVoz;
-		if (!estado || !estado.voz) { vozNavegador(texto); return; }
+		if (!estado || !estado.voz) { vozNavegador(texto); avisar(); return; }
+		// La voz se arma en la máquina y tarda unos segundos: sin avisar, ese
+		// silencio parece que algo se rompió.
+		$("voz").textContent = "Preparando la voz…";
 		try {
 			const r = await api("voz:hablar", { texto }, true);
-			if (turno !== turnoVoz) return;   // ya hay otra frase: esta se descarta
-			if (!r || !r.audio) { vozNavegador(texto); return; }
-			audioActual = new Audio(`data:${r.tipo || "audio/mpeg"};base64,${r.audio}`);
-			audioActual.onended = () => { audioActual = null; if (!estado.completo) orbe("breathing"); };
+			if (turno !== turnoVoz) { avisar(); return; }   // ya hay otra frase: esta se descarta
+			if (!r || !r.audio) { vozNavegador(texto); avisar(); return; }
+			const a = new Audio(`data:${r.tipo || "audio/mpeg"};base64,${r.audio}`);
+			a.onended = () => { audioActual = null; if (!estado.completo) orbe("breathing"); };
+			a.onplaying = avisar;             // el texto arranca con la voz
 			orbe("composing");
-			await audioActual.play();
+			await sonar(a);
+			avisar();                          // por si el navegador no dio onplaying
 		} catch (e) {
-			if (turno === turnoVoz) vozNavegador(texto);
+			// Si VoiceStudio no está abierto, antes se caía a la voz del navegador
+			// sin decir nada y parecía que Lyra había cambiado de voz sola.
+			if (turno === turnoVoz) {
+				$("error").textContent = "No pude hablar con mi voz propia; te estoy hablando con la del navegador.";
+				vozNavegador(texto);
+			}
+		} finally {
+			avisar();
+			pintarBotonVoz();
 		}
 	}
 

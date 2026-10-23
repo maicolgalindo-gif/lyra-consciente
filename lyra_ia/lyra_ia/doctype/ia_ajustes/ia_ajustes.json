@@ -5,7 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "links": [],
- "modified": "2026-10-14 21:00:00.000000",
+ "modified": "2026-10-22 12:20:00.000000",
  "modified_by": "Administrator",
  "module": "Lyra IA",
  "owner": "Administrator",
@@ -125,21 +125,15 @@
   {
    "fieldname": "seccion_voz",
    "fieldtype": "Section Break",
-   "label": "Voz de Lyra (ElevenLabs)",
+   "label": "Voz de Lyra (VoiceStudio)",
    "collapsible": 0
   },
   {
    "fieldname": "voz_activa",
    "fieldtype": "Check",
-   "label": "Usar la voz de ElevenLabs",
+   "label": "Usar la voz de Lyra",
    "default": "0",
-   "description": "Sin esto, o si ElevenLabs falla, Lyra habla con la voz del navegador."
-  },
-  {
-   "fieldname": "voz_clave",
-   "fieldtype": "Password",
-   "label": "Clave de ElevenLabs",
-   "length": 200
+   "description": "Sin esto, o si VoiceStudio no responde, Lyra habla con la voz del navegador."
   },
   {
    "fieldname": "column_break_v",
@@ -149,21 +143,28 @@
    "fieldname": "voz_id",
    "fieldtype": "Data",
    "label": "ID de la voz",
-   "default": "86V9x9hrQds83qf7zaGn",
-   "description": "El ID que sale en la página de la voz en elevenlabs.io."
-  },
-  {
-   "fieldname": "voz_modelo",
-   "fieldtype": "Data",
-   "label": "Modelo de voz",
-   "default": "eleven_multilingual_v2",
-   "description": "eleven_multilingual_v2: la más natural. eleven_flash_v2_5: más rápida y cuesta la mitad."
+   "description": "El identificador de la voz en VoiceStudio (botón «Ver voces»)."
   },
   {
    "fieldname": "voz_estado",
    "fieldtype": "Small Text",
    "label": "Última prueba de voz",
    "read_only": 1
+  },
+  {
+   "fieldname": "voz_url",
+   "fieldtype": "Data",
+   "label": "Dirección de VoiceStudio",
+   "default": "http://host.docker.internal:3900",
+   "description": "Desde el contenedor, «localhost» es el contenedor: para llegar a tu Mac se usa host.docker.internal.",
+   "reqd": 0
+  },
+  {
+   "fieldname": "voz_pasos",
+   "fieldtype": "Int",
+   "label": "Pasos de la voz",
+   "default": "8",
+   "description": "Cuánto se esmera en cada frase. Menos pasos, más rápido: 16 tarda ~11 s, 8 unos 4 s y 4 unos 2 s. Si la voz suena rara, súbelo."
   }
  ],
  "field_order": [
@@ -178,10 +179,10 @@
   "estado_conexion",
   "seccion_voz",
   "voz_activa",
-  "voz_clave",
+  "voz_url",
   "column_break_v",
   "voz_id",
-  "voz_modelo",
+  "voz_pasos",
   "voz_estado",
   "seccion_costo",
   "precio_entrada",

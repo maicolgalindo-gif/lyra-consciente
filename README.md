@@ -26,7 +26,7 @@ Lo que comparten:
 |---|---|
 | `cerebro.py` | La única puerta a la IA (formato OpenAI: DeepSeek, OpenRouter, Together…). Límite de gasto y registro de cada llamada en IA Registro |
 | `alma.py` | Lo que Lyra sabe de la empresa. Se llena sola (entrevista confirmada, empresa, ventas, clientes) y la IA la recibe como contexto |
-| `voz.py` | La voz de Lyra con ElevenLabs; si falla, la del navegador |
+| `voz.py` | La voz de Lyra con VoiceStudio, que corre en la misma máquina: no cobra y el texto no sale de ahí. Si falla, la voz del navegador |
 | `privacidad.py` | Oculta correos, teléfonos y documentos antes de enviarlos a la IA |
 | `entorno.py` | Qué apps hay instaladas y cómo se llama la empresa, en un solo lugar |
 
@@ -41,7 +41,7 @@ Lo que comparten:
 | Frappe v15 | La base sobre la que corre esta app | Sí |
 | ERPNext v15 | Datos del negocio para el asistente y el Alma (clientes, ventas, productos) | No, pero sin él el asistente no tiene qué consultar |
 | Clave de DeepSeek (u otro proveedor compatible con OpenAI) | La IA: entrevista, asistente, copiloto, resúmenes | Para probar la IA. Sin clave, la entrevista corre con un guion fijo |
-| Clave de ElevenLabs | La voz de Lyra | No: sin ella usa la voz del navegador |
+| VoiceStudio en la máquina (lo deja andando `scripts/voz-servicio.sh`) | La voz de Lyra | No: sin él usa la voz del navegador |
 | Chrome o Edge | Responder hablando en la entrevista (micrófono) | No: también se puede escribir |
 
 ### Montarlo con el entorno de LYRA (recomendado)
@@ -99,7 +99,6 @@ Funciona y está probado en local, con DeepSeek:
   quién y por dónde pasa el trabajo, con la frase que justifica cada flecha.
 
 Hecho, pero sin probar de punta a punta:
-- La voz de ElevenLabs (falta probarla con una clave real).
 
 Pendiente:
 - Una pantalla para que el Equipo Lyra lea el consolidado por área (hoy se consulta por API).
@@ -111,7 +110,22 @@ Pendiente:
 
 1. **IA Ajustes** (`/app/ia-ajustes`): proveedor, clave y modelo, activar, y **Probar conexión**.
    La clave se guarda cifrada en la base de datos, nunca en el código ni en `site_config`.
-   Opcional: precios del proveedor (para ver costos) y la voz de ElevenLabs.
+   Opcional: los precios del proveedor, para ver costos.
+   Para la voz, una sola vez:
+   ```bash
+   bash scripts/voz-servicio.sh instalar
+   ```
+   Ese comando hace todo: si no tienes VoiceStudio lo clona e instala, lo deja arrancando solo
+   con la máquina y levantándose si se cae, **mete la voz de Lyra** (`voz/marcela.omnivoice`, el
+   perfil exportado que viaja con el repo) y, si Lyra corre en Docker aquí, se la deja
+   configurada. `estado` y `quitar` para lo demás; `VOICESTUDIO_HOME=/ruta` si ya lo tienes en
+   otro sitio.
+
+   La voz **no** va dentro del contenedor de Lyra a propósito: necesita la GPU, y un contenedor
+   de Linux no alcanza la GPU de un Mac (lo dice la documentación de VoiceStudio). En un servidor
+   Linux con GPU, el mismo script instala el servicio con systemd. Después, en IA Ajustes: la
+   dirección `http://host.docker.internal:3900` —dentro del contenedor «localhost» es el
+   contenedor, no tu máquina—, **Ver voces**, eliges la tuya y **Probar voz**.
 2. El rol **Equipo Lyra** ve IA Ajustes, el Alma, IA Registro, el organigrama y la recomendación de
    módulos del diagnóstico. El cliente, aunque sea System Manager, no los ve. Administrator lo tiene siempre; a
    otra persona del equipo se le asigna en su usuario.
