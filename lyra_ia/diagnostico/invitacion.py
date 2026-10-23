@@ -7,6 +7,11 @@ una contraseña, para una conversación de diez minutos, es un muro.
 
 El enlace resuelve las dos cosas: identifica sin pedir nada.
 
+Quién invita: el Equipo Lyra, que es quien despliega Lyra en la empresa. La
+empresa no invita a nadie, ni siquiera el dueño: si pudiera, decidiría a quién
+se entrevista y a quién no, y la entrevista dejaría de ser de Lyra para ser
+suya.
+
 Lo que lo mantiene honesto:
 - Es personal: un enlace por persona, nunca uno compartido.
 - Se vence (ver Invitacion Lyra) y se puede revocar borrando la invitación.

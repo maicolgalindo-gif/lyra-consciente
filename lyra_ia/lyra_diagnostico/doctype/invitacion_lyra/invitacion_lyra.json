@@ -5,7 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "links": [],
- "modified": "2026-10-23 18:00:00.000000",
+ "modified": "2026-10-23 19:10:00.000000",
  "modified_by": "Administrator",
  "module": "Lyra Diagnostico",
  "owner": "Administrator",
@@ -16,7 +16,7 @@
  "autoname": "hash",
  "title_field": "nombre_persona",
  "track_changes": 1,
- "description": "El enlace con el que una persona entra a hablar con Lyra sin tener que crearse una cuenta ni recordar contraseñas. Es personal y se vence.",
+ "description": "El enlace con el que una persona entra a hablar con Lyra sin cuenta ni contraseña. Lo crea el Equipo Lyra al desplegar: la empresa no invita a nadie.",
  "permissions": [
   {
    "role": "Equipo Lyra",
@@ -26,14 +26,6 @@
    "delete": 1,
    "report": 1,
    "export": 1
-  },
-  {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1
   }
  ],
  "fields": [
