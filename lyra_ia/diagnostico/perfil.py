@@ -5,8 +5,13 @@ la primera: en funcionario.py queda cómo trabaja (eso la empresa sí lo necesit
 aquí queda quién es profesionalmente (estudios, cursos, experiencia, qué quiere
 aprender, su hoja de vida).
 
+Lo que contó se puede corregir en cualquier momento, pero no borrar: es el
+contexto con el que Lyra la acompaña, y sin eso no la conoce. Si alguna vez hay
+que sacarlo (una persona que se va, o que ejerce su derecho a que borren sus
+datos), eso lo hace el Equipo Lyra a mano, no la pantalla.
+
 Quién lo ve, y nadie más:
-- la persona, siempre, y lo puede cambiar o borrar;
+- la persona, siempre, y lo puede corregir;
 - el Equipo Lyra, que no es de la empresa, para entender a quién acompaña;
 - de la empresa, NADIE: ni el dueño ni Recursos Humanos. Ni consolidado: de
   esto no sale ninguna cifra.
@@ -156,16 +161,6 @@ def responder(campo: str, respuesta: str) -> dict:
 		doc.estado = "Confirmado"
 	doc.save(ignore_permissions=True)
 	return mio()
-
-
-@frappe.whitelist(methods=["POST"])
-def borrar() -> dict:
-	"""La persona borra su perfil. Es suyo."""
-	_exigir()
-	doc = _mio(crear=False)
-	if doc:
-		frappe.delete_doc(DT, doc.name, ignore_permissions=True, force=True)
-	return {"ok": True}
 
 
 # ------------------------------------------------- los permisos, en el servidor
