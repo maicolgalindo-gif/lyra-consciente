@@ -30,12 +30,23 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from lyra_ia.diagnostico import cargos
+from lyra_ia.diagnostico import cargos, perfil
 
 DT = "Diagnostico Funcionario"
 CLAVES = cargos.CLAVES
+# Cuando ya se entiende cómo trabaja, la misma conversación sigue con la
+# persona: qué estudió, dónde ha trabajado, qué quiere aprender, y si deja que
+# Recursos Humanos lo lea. Son temas de la charla, pero NO del mapa del
+# trabajo: se guardan en su propio documento (perfil.py) y al dueño no le llegan
+# ni en el consolidado.
+CLAVES_PERFIL = perfil.claves()
 # Freno de seguridad por si la IA nunca da por terminada la entrevista.
 TOPE_SEGURIDAD = 60
+# La IA profundiza mientras encuentra hilo, y hace bien; pero cuando ya tocó
+# todos los temas del trabajo hay que pasar a la persona en algún momento, o la
+# entrevista no termina nunca. Estas son las repreguntas que se le permiten
+# después de haber cubierto todo.
+REPREGUNTAS_MAX = 3
 # Mientras la entrevista sea mas corta que esto, una correccion de la persona
 # todavia puede cambiar el cargo («no, yo soy de compras»).
 VENTANA_CARGO = 3
@@ -113,6 +124,19 @@ def _pregunta_guion(doc, respuestas: list, mapa: dict | None = None) -> dict | N
 			if t["clave"] not in cargos.FIJOS and doc.cargo and not _cargo_dicho(respuestas):
 				pregunta = f"Entonces lo tuyo es {cargos.nombre(doc.cargo).lower()}, ¿cierto? {pregunta}"
 			return {"tema": t["clave"], "pregunta": pregunta, "sugerencias": t["sugerencias"]}
+	return _pregunta_perfil(respuestas)
+
+
+def _pregunta_perfil(respuestas: list) -> dict | None:
+	"""Ya se entiende el trabajo: ahora la persona. Guion fijo a propósito, que
+	aquí no hay nada que improvisar, y el permiso siempre de último."""
+	contado = perfil.lo_contado()
+	hechas = {r.get("tema") for r in respuestas}
+	for tema in perfil.temas():
+		clave = tema["campo"]
+		if clave in hechas or contado.get(clave):
+			continue
+		return {"tema": clave, "pregunta": tema["pregunta"], "sugerencias": tema["sugerencias"]}
 	return None
 
 
@@ -225,7 +249,17 @@ def _archivos(name: str) -> list[str]:
 
 def _vista(doc, respuestas: list, mapa: dict, documentos: list, siguiente: dict | None) -> dict:
 	cuenta = _cubiertos(respuestas, mapa)
-	lista_temas = cargos.temas(doc.cargo)
+	lista_temas = cargos.temas(doc.cargo) + [{"clave": x["campo"], "nombre": x["nombre"]} for x in perfil.temas()]
+	# Lo del perfil se pinta igual que lo demás, pero sale de su documento: el
+	# mapa del trabajo nunca lo guarda.
+	contado = perfil.lo_contado()
+	mapa = dict(mapa)
+	mapa.update(contado)
+	for clave, datos in contado.items():
+		if datos:
+			cuenta[clave] = 1
+		else:
+			cuenta.setdefault(clave, 0)
 	saludo = ("Hola, soy Lyra. Voy a estar contigo en el día a día, así que primero quiero conocerte. "
 			  "Habla con calma: puedes responder hablando o escribiendo.")
 	return {
@@ -272,6 +306,19 @@ def responder(name: str, tema: str, pregunta: str, respuesta: str) -> dict:
 	if doc.estado != "En curso":
 		frappe.throw(_("Esta entrevista ya está confirmada."))
 	respuestas, mapa, documentos = _leer(doc)
+	# Lo que cuenta de sí misma no entra en el mapa del trabajo ni en la
+	# transcripción de la entrevista: va derecho a su perfil, que es suyo.
+	if tema in CLAVES_PERFIL:
+		perfil.desde_entrevista(tema, respuesta)
+		respuestas.append({"tema": tema, "pregunta": pregunta, "respuesta": "(en su perfil)",
+						   "hora": str(now_datetime())})
+		doc.respuestas = json.dumps(respuestas, ensure_ascii=False)
+		doc.save(ignore_permissions=True)
+		siguiente = _pregunta_perfil(respuestas)
+		frappe.cache.set_value(f"lyra_func_siguiente:{doc.name}", siguiente, expires_in_sec=7 * 24 * 3600)
+		vista = _vista(doc, respuestas, mapa, documentos, siguiente)
+		vista["nuevos"] = {tema: perfil.lo_contado().get(tema, [])}
+		return vista
 	respuestas.append({"tema": tema if tema in CLAVES else "dia", "pregunta": pregunta,
 					   "respuesta": respuesta[:1500], "hora": str(now_datetime())})
 	nuevos: dict = {}
@@ -304,7 +351,11 @@ def responder(name: str, tema: str, pregunta: str, respuesta: str) -> dict:
 		en_persona = not cuenta["persona"] or not cuenta["camino"]
 		if isinstance(sig, dict) and en_persona and sig.get("tema") not in cargos.FIJOS:
 			sig = None
-		if not ia.get("completo") and isinstance(sig, dict) and sig.get("tema") in CLAVES \
+		# ¿Ya se tocaron todos los temas del trabajo? Entonces la IA tiene un
+		# número contado de repreguntas antes de dejarle el turno a la persona.
+		cubierto_todo = all(cuenta[k] for k in CLAVES)
+		de_sobra = cubierto_todo and sum(1 for r in respuestas if r.get("tema") in CLAVES) >= len(CLAVES) + REPREGUNTAS_MAX
+		if not ia.get("completo") and not de_sobra and isinstance(sig, dict) and sig.get("tema") in CLAVES \
 				and (sig.get("pregunta") or "").strip() and len(respuestas) < TOPE_SEGURIDAD:
 			texto = sig["pregunta"].strip()[:240]
 			if sig["tema"] not in cargos.FIJOS and doc.cargo and doc.cargo != cargos.GENERICO \
@@ -312,7 +363,7 @@ def responder(name: str, tema: str, pregunta: str, respuesta: str) -> dict:
 				texto = f"Entonces lo tuyo es {cargos.nombre(doc.cargo).lower()}, ¿cierto? {texto}"
 			siguiente = {"tema": sig["tema"], "pregunta": texto,
 						 "sugerencias": [str(x)[:40] for x in (sig.get("sugerencias") or [])][:4]}
-		elif not ia.get("completo"):
+		elif not ia.get("completo") or de_sobra:
 			siguiente = _pregunta_guion(doc, respuestas, mapa)
 	else:
 		_fijar_cargo(doc, respuestas, None)

@@ -27,15 +27,38 @@ from frappe.utils import now_datetime
 DT = "Perfil Funcionario"
 ROL_RRHH = "Recursos Humanos"
 
-# Lo que Lyra le pregunta. Son pocas y opcionales a proposito: el perfil se llena
-# si la persona quiere, y puede dejar lo que sea en blanco.
+# Lo que Lyra le pregunta, al final de la entrevista de trabajo y en la misma
+# conversacion. Son pocas y opcionales a proposito: se llena si la persona
+# quiere, y puede dejar lo que sea en blanco.
+#
+# Estas van por guion fijo, no las decide la IA: son datos de la persona y no
+# hay nada que improvisar. La ultima no es un dato, es el permiso.
 PREGUNTAS = [
-	{"campo": "estudios", "pregunta": "Cuéntame qué estudiaste. Si no terminaste algo, también cuenta."},
-	{"campo": "experiencia", "pregunta": "¿En qué has trabajado antes de aquí?"},
-	{"campo": "cursos", "pregunta": "¿Has hecho cursos o tienes certificaciones, aunque sean cortos?"},
-	{"campo": "quiere_aprender", "pregunta": "¿Qué te gustaría aprender o hacer mejor?"},
+	{"campo": "estudios", "nombre": "Qué estudiaste",
+	 "pregunta": "Ya entiendo cómo trabajas. Ahora cuéntame de ti: ¿qué estudiaste? Si no terminaste algo, también cuenta.",
+	 "sugerencias": []},
+	{"campo": "experiencia", "nombre": "Dónde has trabajado",
+	 "pregunta": "¿En qué has trabajado antes de aquí?",
+	 "sugerencias": []},
+	{"campo": "cursos", "nombre": "Cursos",
+	 "pregunta": "¿Has hecho cursos o tienes certificaciones, aunque sean cortos?",
+	 "sugerencias": ["Ninguno por ahora"]},
+	{"campo": "quiere_aprender", "nombre": "Qué quieres aprender",
+	 "pregunta": "¿Qué te gustaría aprender o hacer mejor?",
+	 "sugerencias": []},
 ]
 CAMPOS = [p["campo"] for p in PREGUNTAS]
+
+# El permiso va aparte y de ultimo: primero la persona ve lo que conto, y
+# despues decide quien lo lee. Nunca al reves.
+PERMISO = {
+	"campo": "permiso", "nombre": "Quién lo ve",
+	"pregunta": "Esto que me contaste de ti es tuyo: tu jefe no lo ve. ¿Dejas que Recursos Humanos lo lea, para tenerte en cuenta en formaciones o vacantes?",
+	"sugerencias": ["Sí, que lo vean", "No, solo yo"],
+}
+# Lo que cuenta como un «sí». Ante la duda, NO se comparte.
+SI = ("si", "sí", "claro", "bueno", "dale", "ok", "listo", "de una", "obvio", "por supuesto",
+	  "no hay problema", "esta bien", "está bien", "adelante", "hagale", "hágale")
 
 
 def _exigir():
@@ -55,6 +78,61 @@ def _mio(crear: bool = True):
 						  "estado": "En curso", "respuestas": "[]"})
 	doc.insert(ignore_permissions=True)
 	return doc
+
+
+def temas() -> list[dict]:
+	"""Los temas del perfil, en orden, con el permiso al final."""
+	return list(PREGUNTAS) + [PERMISO]
+
+
+def claves() -> list[str]:
+	return [p["campo"] for p in temas()]
+
+
+def desde_entrevista(campo: str, respuesta: str) -> None:
+	"""Guarda lo que la persona contó de sí misma en la conversación.
+
+	Se llama desde funcionario.py: el perfil se recoge hablando, en la misma
+	entrevista, pero se guarda aparte y nunca se mezcla con lo del trabajo."""
+	doc = _mio()
+	texto = (respuesta or "").strip()
+	respuestas = json.loads(doc.respuestas or "[]")
+	if campo == "permiso":
+		bajo = texto.lower()
+		# «No» gana siempre: si dice «no, mejor no», no se comparte.
+		dice_si = any(s in bajo for s in SI) and not bajo.startswith(("no", "nel", "prefiero que no"))
+		doc.compartir_rrhh = 1 if dice_si else 0
+		respuestas = [r for r in respuestas if r.get("campo") != "permiso"]
+		respuestas.append({"campo": "permiso", "pregunta": PERMISO["pregunta"], "respuesta": texto[:300],
+						   "hora": str(now_datetime())})
+		doc.respuestas = json.dumps(respuestas, ensure_ascii=False)
+	elif campo in CAMPOS:
+		doc.set(campo, texto[:2000])
+		pregunta = next((p["pregunta"] for p in PREGUNTAS if p["campo"] == campo), campo)
+		respuestas = [r for r in respuestas if r.get("campo") != campo]
+		respuestas.append({"campo": campo, "pregunta": pregunta, "respuesta": texto[:2000],
+						   "hora": str(now_datetime())})
+		doc.respuestas = json.dumps(respuestas, ensure_ascii=False)
+	else:
+		return
+	doc.actualizado_el = now_datetime()
+	if all((doc.get(c) or "").strip() for c in CAMPOS):
+		doc.estado = "Confirmado"
+	doc.save(ignore_permissions=True)
+
+
+def lo_contado() -> dict:
+	"""Lo que la persona ya contó de sí misma, para pintarlo en la pantalla."""
+	doc = _mio(crear=False)
+	if not doc:
+		return {c: [] for c in claves()}
+	salida = {c: ([doc.get(c)[:90]] if (doc.get(c) or "").strip() else []) for c in CAMPOS}
+	# El permiso cuenta como contestado solo si ELLA contestó esa pregunta; con
+	# mirar si hay otros datos, Lyra se la saltaba y nadie decidía nada.
+	contestado = any(r.get("campo") == "permiso" for r in json.loads(doc.respuestas or "[]"))
+	salida["permiso"] = ([] if not contestado else
+						 ["Lo ve Recursos Humanos"] if doc.compartir_rrhh else ["Solo lo ves tú"])
+	return salida
 
 
 # ------------------------------------------------------------------- API
