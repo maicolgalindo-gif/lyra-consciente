@@ -72,6 +72,7 @@ def mio() -> dict:
 		"compartir_rrhh": bool(doc.compartir_rrhh),
 		"hoja_vida": doc.hoja_vida or "",
 		"datos": {c: doc.get(c) or "" for c in CAMPOS},
+		"preguntas": PREGUNTAS,
 		"siguiente": siguiente,
 		"completo": siguiente is None,
 	}

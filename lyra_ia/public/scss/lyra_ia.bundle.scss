@@ -270,3 +270,26 @@
 		span { margin-left: 8px; }
 	}
 }
+
+// Mi perfil (page mi-perfil): lo que cada quien cuenta de si mismo. Pantalla
+// sobria a proposito: aqui se habla de la persona, no de la empresa.
+.lyra-perfil {
+	max-width: 680px;
+	.intro { max-width: 640px; }
+	.campo-perfil {
+		margin: 16px 0;
+		label { display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-color); }
+		textarea {
+			width: 100%; padding: 9px 11px; border-radius: 8px; resize: vertical;
+			border: 1px solid var(--border-color); background: var(--control-bg); color: var(--text-color);
+			&:focus { outline: none; border-color: var(--primary); }
+		}
+	}
+	.bloque-perfil { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border-color); }
+	.interruptor {
+		display: flex; align-items: center; gap: 9px; font-weight: 400; margin: 0;
+		input { margin: 0; }
+	}
+	.estado-hv { margin-bottom: 8px; font-size: 13px; }
+	.pie-perfil { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--border-color); }
+}
