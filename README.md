@@ -15,7 +15,7 @@ andando sin ellas.
 | Diagnóstico del dueño | `diagnostico/entrevista.py`, página `/lyra` | El primer acercamiento: Lyra entrevista al dueño (primero a la persona, después la empresa), le muestra lo que entendió y le dice cómo lo va a ayudar. La recomendación de módulos queda aparte, solo para el Equipo Lyra |
 | Diagnóstico de cada funcionario | `diagnostico/funcionario.py`, `cargos.py`, la misma `/lyra` | Lyra entra a toda la empresa: deduce el cargo de la primera respuesta, pregunta según el puesto (contabilidad, RR. HH., ventas…) y pide los formatos y manuales con los que se trabaja de verdad. Al dueño solo le llega el consolidado, por área y sin nombres |
 | Organigrama (solo Equipo Lyra) | `diagnostico/organigrama.py`, página `lyra-organigrama` | Herramienta nuestra, no del cliente: se arma solo con lo que la gente contó. De los traspasos («de quién recibo, a quién entrego») salen quién le reporta a quién y por dónde pasa el trabajo de verdad, que casi nunca es igual al cuadrito oficial. Con eso el equipo entiende la empresa y arma la recomendación |
-| Perfil profesional | `diagnostico/perfil.py` | La otra mitad, que no se cruza con la anterior: cuando Lyra ya entiende cómo trabaja, la misma conversación sigue con la persona (qué estudió, dónde ha trabajado, qué quiere aprender) y termina preguntándole si deja que Recursos Humanos lo lea. Se guarda en su propio documento: ni el mapa del trabajo ni su transcripción lo tocan, y al dueño no le llega nunca |
+| Perfil profesional | `diagnostico/perfil.py` | La otra mitad, que no se cruza con la anterior: cuando Lyra ya entiende cómo trabaja, la misma conversación sigue con la persona (qué estudió, dónde ha trabajado, qué quiere aprender). Se guarda en su propio documento: ni el mapa del trabajo ni su transcripción lo tocan. Lo ven la persona y el Equipo Lyra; de la empresa, nadie |
 | Asistente y copiloto | `asistente.py`, `copiloto.py`, `herramientas*.py` | Chat dentro del ERP que consulta los módulos activos con los permisos del usuario; ayuda en los chats de WhatsApp y WAHA si esas apps están |
 | Lyra se da cuenta | `sense/`, página `lyra-sense` | En segundo plano: reglas de datos que faltan (avisa en privado o completa, con Deshacer), métricas por área (nunca por persona) y reporte semanal al dueño |
 | Clasificaciones | `clasificador.py` | Preguntas con el formato de Laya; hoy responde el modelo y cada respuesta queda en IA Clasificacion para entrenar a Laya más adelante |
@@ -92,9 +92,9 @@ Funciona y está probado en local, con DeepSeek:
 - La entrevista a los funcionarios: Lyra deduce el cargo, lo confirma, pregunta según el puesto, recibe
   los archivos que le comparten y al final le dice a la persona cómo la va a ayudar. Probado con
   DeepSeek en contabilidad y en Recursos Humanos.
-- Quién ve qué: el dueño no ve las entrevistas con nombre ni ningún perfil profesional, solo el
-  consolidado por área; Recursos Humanos ve un perfil solo si esa persona lo permitió, y no lo puede
-  cambiar; cada quien ve lo suyo.
+- Quién ve qué: el dueño no ve las entrevistas con nombre ni ningún perfil, solo el consolidado por
+  área. El Equipo Lyra, que no es de la empresa, sí ve las entrevistas y los perfiles, pero no puede
+  cambiar lo que alguien contó de sí mismo. Cada quien ve lo suyo.
 - El organigrama que sale de las entrevistas, para el Equipo Lyra: los cargos, quién le reporta a
   quién y por dónde pasa el trabajo, con la frase que justifica cada flecha.
 
@@ -131,8 +131,7 @@ Pendiente:
    otra persona del equipo se le asigna en su usuario.
 3. La entrevista se abre en `/lyra`. A un System Manager le toca la de su empresa; a cualquier otra
    persona, la de su trabajo. Con `/lyra?modo=trabajo` el dueño también cuenta cómo trabaja él.
-4. El rol **Recursos Humanos** solo sirve para ver los perfiles profesionales que su dueño haya
-   compartido. Sin ese permiso, no ve ninguno.
+
 
 ## Reglas de diseño
 

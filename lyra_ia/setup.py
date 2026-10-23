@@ -12,16 +12,8 @@ def crear_rol_equipo():
 		frappe.get_doc({"doctype": "Role", "role_name": "Equipo Lyra", "desk_access": 1}).insert(ignore_permissions=True)
 
 
-def crear_rol_rrhh():
-	"""«Recursos Humanos»: los unicos, fuera de la propia persona, que pueden ver un
-	perfil profesional, y solo si esa persona lo permitio (ver diagnostico/perfil.py)."""
-	if not frappe.db.exists("Role", "Recursos Humanos"):
-		frappe.get_doc({"doctype": "Role", "role_name": "Recursos Humanos", "desk_access": 1}).insert(ignore_permissions=True)
-
-
 def despues_de_migrar():
 	crear_rol_equipo()
-	crear_rol_rrhh()
 	"""Un Single no toma los 'default' de sus campos hasta que alguien lo guarda:
 	sin esto «Lyra se da cuenta» arrancaria apagada y sin tope de avisos. Solo se
 	llenan los campos que nunca se guardaron; lo configurado no se toca."""

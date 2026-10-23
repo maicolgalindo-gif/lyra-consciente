@@ -7,9 +7,9 @@ aprender, su hoja de vida).
 
 Quién lo ve, y nadie más:
 - la persona, siempre, y lo puede cambiar o borrar;
-- Recursos Humanos, SOLO si ella lo permitió (compartir_rrhh), y lo puede quitar
-  cuando quiera;
-- el dueño, nunca. Ni consolidado: de esto no sale ninguna cifra.
+- el Equipo Lyra, que no es de la empresa, para entender a quién acompaña;
+- de la empresa, NADIE: ni el dueño ni Recursos Humanos. Ni consolidado: de
+  esto no sale ninguna cifra.
 
 Los permisos no se dejan al doctype solo: se sostienen abajo con las dos funciones
 que Frappe consulta en cada lectura (condiciones y puede_ver, enganchadas en
@@ -25,17 +25,19 @@ from frappe import _
 from frappe.utils import now_datetime
 
 DT = "Perfil Funcionario"
-ROL_RRHH = "Recursos Humanos"
+# El Equipo Lyra somos nosotros, que no somos de la empresa: lo vemos para
+# entender a quién estamos acompañando. De la empresa no lo ve nadie, ni RR. HH.
+ROL_EQUIPO = "Equipo Lyra"
 
 # Lo que Lyra le pregunta, al final de la entrevista de trabajo y en la misma
 # conversacion. Son pocas y opcionales a proposito: se llena si la persona
 # quiere, y puede dejar lo que sea en blanco.
 #
 # Estas van por guion fijo, no las decide la IA: son datos de la persona y no
-# hay nada que improvisar. La ultima no es un dato, es el permiso.
+# hay nada que improvisar.
 PREGUNTAS = [
 	{"campo": "estudios", "nombre": "Qué estudiaste",
-	 "pregunta": "Ya entiendo cómo trabajas. Ahora cuéntame de ti: ¿qué estudiaste? Si no terminaste algo, también cuenta.",
+	 "pregunta": "Ya entiendo cómo trabajas. Ahora cuéntame de ti, y esto no lo lee nadie de tu empresa: ¿qué estudiaste? Si no terminaste algo, también cuenta.",
 	 "sugerencias": []},
 	{"campo": "experiencia", "nombre": "Dónde has trabajado",
 	 "pregunta": "¿En qué has trabajado antes de aquí?",
@@ -49,16 +51,10 @@ PREGUNTAS = [
 ]
 CAMPOS = [p["campo"] for p in PREGUNTAS]
 
-# El permiso va aparte y de ultimo: primero la persona ve lo que conto, y
-# despues decide quien lo lee. Nunca al reves.
-PERMISO = {
-	"campo": "permiso", "nombre": "Quién lo ve",
-	"pregunta": "Esto que me contaste de ti es tuyo: tu jefe no lo ve. ¿Dejas que Recursos Humanos lo lea, para tenerte en cuenta en formaciones o vacantes?",
-	"sugerencias": ["Sí, que lo vean", "No, solo yo"],
-}
-# Lo que cuenta como un «sí». Ante la duda, NO se comparte.
-SI = ("si", "sí", "claro", "bueno", "dale", "ok", "listo", "de una", "obvio", "por supuesto",
-	  "no hay problema", "esta bien", "está bien", "adelante", "hagale", "hágale")
+# No hay permiso que pedir: esto no lo lee nadie de la empresa. Lo que sí hay
+# es decírselo, antes de que empiece a contar, para que sepa dónde está parada.
+AVISO = ("Esto que viene es tuyo y no lo lee nadie de tu empresa: ni tu jefe, ni Recursos Humanos. "
+		 "Lo guardo yo, para conocerte y acompañarte mejor.")
 
 
 def _exigir():
@@ -81,8 +77,8 @@ def _mio(crear: bool = True):
 
 
 def temas() -> list[dict]:
-	"""Los temas del perfil, en orden, con el permiso al final."""
-	return list(PREGUNTAS) + [PERMISO]
+	"""Los temas del perfil, en orden."""
+	return list(PREGUNTAS)
 
 
 def claves() -> list[str]:
@@ -97,16 +93,7 @@ def desde_entrevista(campo: str, respuesta: str) -> None:
 	doc = _mio()
 	texto = (respuesta or "").strip()
 	respuestas = json.loads(doc.respuestas or "[]")
-	if campo == "permiso":
-		bajo = texto.lower()
-		# «No» gana siempre: si dice «no, mejor no», no se comparte.
-		dice_si = any(s in bajo for s in SI) and not bajo.startswith(("no", "nel", "prefiero que no"))
-		doc.compartir_rrhh = 1 if dice_si else 0
-		respuestas = [r for r in respuestas if r.get("campo") != "permiso"]
-		respuestas.append({"campo": "permiso", "pregunta": PERMISO["pregunta"], "respuesta": texto[:300],
-						   "hora": str(now_datetime())})
-		doc.respuestas = json.dumps(respuestas, ensure_ascii=False)
-	elif campo in CAMPOS:
+	if campo in CAMPOS:
 		doc.set(campo, texto[:2000])
 		pregunta = next((p["pregunta"] for p in PREGUNTAS if p["campo"] == campo), campo)
 		respuestas = [r for r in respuestas if r.get("campo") != campo]
@@ -127,11 +114,6 @@ def lo_contado() -> dict:
 	if not doc:
 		return {c: [] for c in claves()}
 	salida = {c: ([doc.get(c)[:90]] if (doc.get(c) or "").strip() else []) for c in CAMPOS}
-	# El permiso cuenta como contestado solo si ELLA contestó esa pregunta; con
-	# mirar si hay otros datos, Lyra se la saltaba y nadie decidía nada.
-	contestado = any(r.get("campo") == "permiso" for r in json.loads(doc.respuestas or "[]"))
-	salida["permiso"] = ([] if not contestado else
-						 ["Lo ve Recursos Humanos"] if doc.compartir_rrhh else ["Solo lo ves tú"])
 	return salida
 
 
@@ -147,7 +129,6 @@ def mio() -> dict:
 		"name": doc.name,
 		"nombre_usuario": doc.nombre_persona or "",
 		"estado": doc.estado,
-		"compartir_rrhh": bool(doc.compartir_rrhh),
 		"hoja_vida": doc.hoja_vida or "",
 		"datos": {c: doc.get(c) or "" for c in CAMPOS},
 		"preguntas": PREGUNTAS,
@@ -178,16 +159,6 @@ def responder(campo: str, respuesta: str) -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
-def permitir_rrhh(permitir: int = 1) -> dict:
-	"""La persona decide si Recursos Humanos puede ver su perfil. Lo puede quitar después."""
-	_exigir()
-	doc = _mio()
-	doc.compartir_rrhh = 1 if int(permitir) else 0
-	doc.save(ignore_permissions=True)
-	return {"ok": True, "compartir_rrhh": bool(doc.compartir_rrhh)}
-
-
-@frappe.whitelist(methods=["POST"])
 def borrar() -> dict:
 	"""La persona borra su perfil. Es suyo."""
 	_exigir()
@@ -206,10 +177,9 @@ def condiciones(user: str | None = None) -> str:
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return ""
-	mio = f"`tabPerfil Funcionario`.funcionario = {frappe.db.escape(user)}"
-	if ROL_RRHH in frappe.get_roles(user):
-		return f"({mio} OR `tabPerfil Funcionario`.compartir_rrhh = 1)"
-	return mio
+	if ROL_EQUIPO in frappe.get_roles(user):
+		return ""
+	return f"`tabPerfil Funcionario`.funcionario = {frappe.db.escape(user)}"
 
 
 def puede_ver(doc, ptype: str = "read", user: str | None = None) -> bool:
@@ -219,5 +189,5 @@ def puede_ver(doc, ptype: str = "read", user: str | None = None) -> bool:
 		return True
 	if doc.get("funcionario") == user:
 		return True
-	# Recursos Humanos lee lo que le dejaron ver; cambiarlo, nunca.
-	return bool(ptype == "read" and doc.get("compartir_rrhh") and ROL_RRHH in frappe.get_roles(user))
+	# El Equipo Lyra lee; cambiar lo que alguien contó de sí mismo, nunca.
+	return bool(ptype == "read" and ROL_EQUIPO in frappe.get_roles(user))

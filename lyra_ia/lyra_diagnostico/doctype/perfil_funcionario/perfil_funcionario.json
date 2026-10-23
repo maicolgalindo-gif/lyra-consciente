@@ -5,7 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "links": [],
- "modified": "2026-10-21 20:00:00.000000",
+ "modified": "2026-10-23 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Lyra Diagnostico",
  "owner": "Administrator",
@@ -16,7 +16,7 @@
  "autoname": "field:funcionario",
  "title_field": "nombre_persona",
  "track_changes": 1,
- "description": "Lo que la persona cuenta de sí misma: estudios, experiencia y qué quiere aprender. Lo ve ella, y Recursos Humanos solo si ella lo permite. Al dueño nunca le llega.",
+ "description": "Lo que la persona cuenta de sí misma: estudios, experiencia y qué quiere aprender. Lo ve ella y el Equipo Lyra. De la empresa, nadie: ni el dueño ni Recursos Humanos.",
  "permissions": [
   {
    "role": "All",
@@ -26,7 +26,7 @@
    "if_owner": 1
   },
   {
-   "role": "Recursos Humanos",
+   "role": "Equipo Lyra",
    "read": 1,
    "report": 1
   }
@@ -62,18 +62,6 @@
    "fieldtype": "Datetime",
    "label": "Actualizado el",
    "read_only": 1
-  },
-  {
-   "fieldname": "sec_permiso",
-   "fieldtype": "Section Break",
-   "label": "Tu permiso"
-  },
-  {
-   "fieldname": "compartir_rrhh",
-   "fieldtype": "Check",
-   "label": "Dejo que Recursos Humanos vea mi perfil",
-   "default": "0",
-   "description": "Sin esto, tu perfil solo lo ves tú. Lo puedes cambiar cuando quieras."
   },
   {
    "fieldname": "sec_perfil",
@@ -133,8 +121,6 @@
   "estado",
   "column_break_1",
   "actualizado_el",
-  "sec_permiso",
-  "compartir_rrhh",
   "sec_perfil",
   "estudios",
   "experiencia",
