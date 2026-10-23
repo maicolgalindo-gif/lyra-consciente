@@ -21,17 +21,30 @@ class LyraSense {
 				<div class="tiles"></div>
 				<section class="bloque"><h5>Por área</h5><div class="areas"></div></section>
 				<div class="dos">
-					<section class="bloque"><h5>Reglas <button class="btn btn-xs btn-default sugeridas">Agregar reglas sugeridas</button></h5>
+					<section class="bloque"><h5>Reglas <button class="btn btn-xs btn-default sugeridas">Proponer reglas de lo que contaron</button></h5>
 						<div class="reglas"></div></section>
 					<section class="bloque"><h5>Últimos avisos</h5><div class="avisos"></div></section>
 				</div>
 				<section class="bloque"><h5>Reporte semanal al dueño <button class="btn btn-xs btn-default enviar">Enviar uno ahora</button></h5>
 					<div class="reporte"></div></section>
 			</div>`).appendTo(this.page.body);
+		// Las reglas salen de lo que la gente contó en su entrevista, no de una
+		// lista fija: si nadie dijo nada, Lyra no propone nada.
 		this.$.find(".sugeridas").on("click", async () => {
-			const r = await frappe.call({ method: `${API_SENSE}.crear_sugeridas`, type: "POST" });
-			frappe.show_alert({ message: r.message.creadas ? `${r.message.creadas} reglas agregadas, apagadas: revísalas y enciéndelas.`
-				: "Las reglas sugeridas ya estaban.", indicator: "green" });
+			const r = await frappe.call({ method: "lyra_ia.sense.propuestas.crear", type: "POST", freeze: true,
+				freeze_message: "Mirando lo que contó la gente…" });
+			const m = r.message || {};
+			if (!m.cuantas) {
+				frappe.msgprint({ title: "Nada que proponer", indicator: "blue",
+					message: "No hay nada nuevo que proponer. Lyra propone reglas a partir de lo que la gente "
+						+ "cuenta en su entrevista: si todavía no has entrevistado a nadie, o lo que contaron ya "
+						+ "está vigilado, no hay de dónde sacarlas." });
+			} else {
+				frappe.msgprint({ title: "Reglas propuestas", indicator: "green",
+					message: "<p>Lyra propone estas, apagadas. Ábrelas, mira por qué las propone y enciéndelas:</p><ul>"
+						+ m.creadas.map((c) => `<li><b>${frappe.utils.escape_html(c.titulo)}</b> — lo dijeron ${c.personas} persona(s)</li>`).join("")
+						+ "</ul>" });
+			}
 			this.cargar();
 		});
 		this.$.find(".enviar").on("click", async () => {

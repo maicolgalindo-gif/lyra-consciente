@@ -183,28 +183,3 @@ def enviar_ahora() -> dict:
 	return enviar_reporte(forzar=True)
 
 
-SUGERIDAS = [
-	{"titulo": "Chat de WhatsApp resuelto sin etiqueta", "ref_doctype": "WhatsApp Conversacion", "evento": "Al guardar",
-	 "campo": "etiquetas", "condicion": 'doc.estado == "Resuelta"', "modo": "Avisar", "app": "lyra_whatsapp"},
-	{"titulo": "Cliente potencial sin celular", "ref_doctype": "Lead", "evento": "Al crear", "campo": "mobile_no",
-	 "modo": "Avisar", "app": "erpnext"},
-	{"titulo": "Oportunidad sin responsable", "ref_doctype": "Opportunity", "evento": "Al crear", "campo": "opportunity_owner",
-	 "modo": "Completar", "valor": "{usuario}", "app": "erpnext"},
-	{"titulo": "Cotización sin fecha de validez", "ref_doctype": "Quotation", "evento": "Al guardar", "campo": "valid_till",
-	 "modo": "Avisar", "app": "erpnext"},
-]
-
-
-@frappe.whitelist(methods=["POST"])
-def crear_sugeridas() -> dict:
-	"""Reglas de ejemplo, apagadas: se revisan y se encienden una por una."""
-	frappe.only_for("System Manager")
-	instaladas = frappe.get_installed_apps()
-	creadas = 0
-	for r in SUGERIDAS:
-		if r["app"] not in instaladas or frappe.db.exists("Sense Regla", {"titulo": r["titulo"]}):
-			continue
-		datos = {k: v for k, v in r.items() if k != "app"}
-		frappe.get_doc({"doctype": "Sense Regla", "activa": 0, **datos}).insert()
-		creadas += 1
-	return {"creadas": creadas}
