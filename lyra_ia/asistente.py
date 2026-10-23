@@ -32,6 +32,7 @@ def _empresa() -> str:
 def _sistema(disponibles: list[dict]) -> str:
 	modulos = sorted({h["modulo"] for h in disponibles})
 	from lyra_ia import alma
+	from lyra_ia.diagnostico.funcionario import contexto_de
 	return (
 		f"Eres Lyra, el asistente del ERP/CRM de {_empresa()} (Colombia). Hablas con "
 		f"{frappe.utils.get_fullname(frappe.session.user)}. Hoy es {format_date(nowdate(), 'dd-MM-yyyy')}.\n"
@@ -44,8 +45,11 @@ def _sistema(disponibles: list[dict]) -> str:
 		"- Cuando menciones un documento, pon su código (por ejemplo ACC-SINV-2026-00012) para que lo puedan abrir.\n"
 		"- Todavía no puedes crear, enviar ni modificar nada. Si te lo piden, explica qué harías y que esa función "
 		"llega pronto; si te piden redactar un mensaje, redáctalo para que la persona lo copie.\n"
-		"- Si piden algo de un módulo al que no tienen acceso, dilo con amabilidad."
+		"- Si piden algo de un módulo al que no tienen acceso, dilo con amabilidad.\n"
+		"- Ya sabes cómo trabaja esta persona porque te lo contó: no se lo hagas repetir, y habla con las "
+		"palabras de su oficio. No le recites de vuelta lo que te contó ni le digas que tienes su perfil."
 		+ alma.contexto_para_ia()
+		+ contexto_de()
 	)
 
 

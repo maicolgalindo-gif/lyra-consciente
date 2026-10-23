@@ -561,3 +561,43 @@ def consolidado() -> dict:
 		})
 	return {"minimo": minimo, "areas": salida,
 			"entrevistados": frappe.db.count(DT, {"estado": "Confirmado"})}
+
+
+# ---------------------------------------------- lo que Lyra sabe de quien le habla
+def contexto_de(usuario: str | None = None) -> str:
+	"""Lo que esta persona le contó a Lyra, para que Lyra no se lo haga repetir.
+
+	Es SU propia entrevista, así que no hay nada que proteger aquí: lo que una
+	persona contó vuelve a ella. Sirve para que el asistente sepa de qué le
+	hablan sin preguntarlo otra vez: a quien lleva la contabilidad no hay que
+	explicarle qué es una causación, y si dijo que el cierre la ahoga, Lyra ya
+	sabe por dónde le aprieta el zapato.
+	"""
+	usuario = usuario or frappe.session.user
+	if not frappe.db.exists("DocType", DT):
+		return ""
+	d = frappe.db.get_value(DT, {"funcionario": usuario}, ["cargo_nombre", "area", "mapa"],
+							as_dict=True, order_by="modified desc")
+	if not d:
+		return ""
+	lineas = []
+	if d.cargo_nombre:
+		lineas.append(_("Lo que hace: {0} ({1}).").format(d.cargo_nombre, d.area or _("sin área")))
+	mapa = frappe.parse_json(d.mapa or "{}") or {}
+	for clave, etiqueta in (("proceso", _("Así trabaja")), ("herramientas", _("Con qué trabaja")),
+							("dolores", _("Lo que le cuesta")), ("traspaso", _("Se coordina con"))):
+		datos = [x for x in (mapa.get(clave) or []) if x]
+		if datos:
+			lineas.append(f"{etiqueta}: {'; '.join(datos[:4])}.")
+	# De su perfil solo lo que sirve para acompañarla; lo demás no viene al caso.
+	try:
+		from lyra_ia.diagnostico import perfil
+
+		p = frappe.db.get_value("Perfil Funcionario", {"funcionario": usuario}, "quiere_aprender")
+		if p:
+			lineas.append(_("Le gustaría aprender: {0}.").format(p[:150]))
+	except Exception:
+		pass
+	if not lineas:
+		return ""
+	return "\n\nLo que esta persona te contó de su trabajo:\n" + "\n".join(lineas)
