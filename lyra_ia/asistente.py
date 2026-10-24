@@ -29,7 +29,7 @@ def _empresa() -> str:
 	return empresa()
 
 
-def _sistema(disponibles: list[dict]) -> str:
+def _sistema(disponibles: list[dict], posibles: list[dict] | None = None) -> str:
 	modulos = sorted({h["modulo"] for h in disponibles})
 	from lyra_ia import alma
 	from lyra_ia.diagnostico.funcionario import contexto_de
@@ -43,9 +43,14 @@ def _sistema(disponibles: list[dict]) -> str:
 		"- Responde en español, claro y breve. Usa listas o tablas cortas en Markdown cuando ayuden. Montos en pesos "
 		"como los da la herramienta.\n"
 		"- Cuando menciones un documento, pon su código (por ejemplo ACC-SINV-2026-00012) para que lo puedan abrir.\n"
-		"- Todavía no puedes crear, enviar ni modificar nada. Si te lo piden, explica qué harías y que esa función "
-		"llega pronto; si te piden redactar un mensaje, redáctalo para que la persona lo copie.\n"
-		"- Si piden algo de un módulo al que no tienen acceso, dilo con amabilidad.\n"
+		+ ("- Hay cosas que SÍ puedes hacer (las que empiezan por «proponer_»), pero nunca solo: dejas la "
+		   "propuesta y la persona dice si va. Cuando uses una, redacta el contenido completo y bien, porque es "
+		   "lo que se va a mandar tal cual; después dile en una línea qué propusiste y que espera su confirmación. "
+		   "No digas que ya lo hiciste.\n"
+		   if posibles else
+		   "- Todavía no puedes crear, enviar ni modificar nada. Si te lo piden, explica qué harías y que esa "
+		   "función llega pronto; si te piden redactar un mensaje, redáctalo para que la persona lo copie.\n")
+		+ "- Si piden algo de un módulo al que no tienen acceso, dilo con amabilidad.\n"
 		"- Ya sabes cómo trabaja esta persona porque te lo contó: no se lo hagas repetir, y habla con las "
 		"palabras de su oficio. No le recites de vuelta lo que te contó ni le digas que tienes su perfil."
 		+ alma.contexto_para_ia()
@@ -107,18 +112,25 @@ def preguntar(texto: str, name: str | None = None) -> dict:
 	historia.append({"rol": "usuario", "texto": texto, "hora": str(now_datetime())})
 
 	disponibles = herramientas.disponibles()
-	mensajes = [{"role": "system", "content": _sistema(disponibles)}]
+	# Lo que Lyra puede hacer, además de consultar. No lo hace: lo propone, y la
+	# persona dice si va (ver acciones.py).
+	from lyra_ia import acciones as mod_acciones
+
+	posibles = mod_acciones.disponibles()
+	mensajes = [{"role": "system", "content": _sistema(disponibles, posibles)}]
 	for m in historia[-MAX_HISTORIA:]:
 		mensajes.append({"role": "user" if m["rol"] == "usuario" else "assistant", "content": m["texto"]})
 
 	mapa: dict = {}  # datos personales ocultos, el mismo para toda la pregunta
 	usadas = []
+	propuestas: list = []   # lo que Lyra quiere hacer y está esperando un sí
 	try:
 		respuesta = ""
 		for vuelta in range(MAX_VUELTAS + 1):
 			mensaje = cerebro.llamar(
 				mensajes, "asistente", mapa, referencia=(DT, doc.name),
-				herramientas=herramientas.para_el_modelo(disponibles) if disponibles and vuelta < MAX_VUELTAS else None,
+				herramientas=((herramientas.para_el_modelo(disponibles) + mod_acciones.para_el_modelo(posibles))
+							  if (disponibles or posibles) and vuelta < MAX_VUELTAS else None),
 				max_tokens=1200,
 			)
 			llamadas = mensaje.get("tool_calls") or []
@@ -132,14 +144,21 @@ def preguntar(texto: str, name: str | None = None) -> dict:
 					args = json.loads(privacidad.mostrar(ll["function"].get("arguments") or "{}", mapa))
 				except ValueError:
 					args = {}
-				resultado = herramientas.ejecutar(disponibles, nombre, args)
+				if nombre.startswith("proponer_"):
+					# No se hace: se deja escrito para que la persona lo apruebe.
+					p = mod_acciones.proponer(posibles, nombre, args, conversacion=doc.name)
+					propuestas.append(p) if "propuesta" in p else None
+					resultado = json.dumps(p, ensure_ascii=False)
+				else:
+					resultado = herramientas.ejecutar(disponibles, nombre, args)
 				usadas.append(nombre)
 				mensajes.append({"role": "tool", "tool_call_id": ll["id"], "content": resultado})
 	except IAError as e:
 		frappe.throw(str(e), title=_("Lyra IA"))
 
 	historia.append({"rol": "lyra", "texto": respuesta.strip() or _("No tengo una respuesta para eso."),
-					 "hora": str(now_datetime()), "consultas": sorted(set(usadas))})
+					 "hora": str(now_datetime()), "consultas": sorted(set(usadas)),
+					 "propuestas": propuestas})
 	doc.mensajes = json.dumps(historia, ensure_ascii=False)
 	doc.save(ignore_permissions=True)
 	return {"name": doc.name, "titulo": doc.titulo, "mensajes": historia}

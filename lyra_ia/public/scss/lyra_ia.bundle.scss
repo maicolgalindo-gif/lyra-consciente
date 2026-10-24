@@ -295,3 +295,13 @@
 	}
 	.pie { margin-top: 18px; }
 }
+
+// Lo que Lyra propone hacer, dentro del chat del asistente. Se ve distinto del
+// resto del mensaje a proposito: aqui hay algo que decidir.
+.lyra-asistente .propuesta {
+	margin: 10px 0 2px; padding: 11px 13px; border-radius: 10px;
+	border: 1px solid var(--border-color); background: var(--subtle-fg);
+	.que { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+	.decidir { display: flex; gap: 8px; align-items: center; margin-top: 9px; }
+	.hecho { color: var(--text-on-green); font-size: 12px; font-weight: 500; }
+}

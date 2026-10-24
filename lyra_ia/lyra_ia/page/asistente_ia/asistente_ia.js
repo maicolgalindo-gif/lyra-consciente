@@ -145,6 +145,38 @@ class AsistenteLyra {
 		this.pintar(r.message.mensajes);
 	}
 
+	// Lo que Lyra quiere hacer y está esperando un sí. Nada se ha hecho todavía:
+	// el botón es lo que lo hace.
+	pintarPropuesta(p) {
+		if (!p || !p.propuesta) return "";
+		return `<div class="propuesta" data-propuesta="${escA(p.propuesta)}">
+				<div class="que">${escA(p.resumen).replace(/\n/g, "<br>")}</div>
+				<div class="decidir">
+					<button class="btn btn-xs btn-primary si">Sí, hazlo</button>
+					<button class="btn btn-xs btn-default no">No</button>
+				</div>
+			</div>`;
+	}
+
+	async decidir(name, $caja, acepta) {
+		const metodo = acepta ? "confirmar" : "rechazar";
+		try {
+			const r = await frappe.call({ method: `lyra_ia.acciones.${metodo}`, type: "POST",
+				args: { name }, freeze: true, freeze_message: acepta ? "Haciéndolo…" : "Listo" });
+			const m = r.message || {};
+			$caja.find(".decidir").html(acepta
+				? `<span class="hecho">Hecho.</span>${m.se_puede_deshacer
+					? ` <button class="btn btn-xs btn-default deshacer">Deshacer</button>` : ""}`
+				: `<span class="text-muted">No se hizo.</span>`);
+			$caja.find(".deshacer").on("click", async () => {
+				await frappe.call({ method: "lyra_ia.acciones.deshacer", type: "POST", args: { name }, freeze: true });
+				$caja.find(".decidir").html(`<span class="text-muted">Deshecho.</span>`);
+			});
+		} catch (e) {
+			$caja.find(".decidir").html(`<span class="text-danger">No se pudo.</span>`);
+		}
+	}
+
 	pintar(mensajes) {
 		this.$msgs.html(
 			mensajes
@@ -152,11 +184,17 @@ class AsistenteLyra {
 					m.rol === "usuario"
 						? `<div class="msg yo"><div class="burbuja">${escA(m.texto).replace(/\n/g, "<br>")}</div></div>`
 						: `<div class="msg lyra"><div class="burbuja">${md(m.texto)}
+							${(m.propuestas || []).map((p) => this.pintarPropuesta(p)).join("")}
 							${(m.consultas || []).length ? `<div class="consultas">Consultó: ${m.consultas.map((c) => escA(NOMBRE_CONSULTA[c] || c)).join(" · ")}</div>` : ""}
 						</div></div>`
 				)
 				.join("")
 		);
+		this.$msgs.find(".propuesta").each((i, el) => {
+			const $caja = $(el), name = $caja.data("propuesta");
+			$caja.find(".si").on("click", () => this.decidir(name, $caja, true));
+			$caja.find(".no").on("click", () => this.decidir(name, $caja, false));
+		});
 		this.$msgs.scrollTop(this.$msgs[0].scrollHeight);
 	}
 

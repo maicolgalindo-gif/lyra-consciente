@@ -34,6 +34,10 @@ lyra_ia_preguntas = ["lyra_ia.copiloto.preguntas_whatsapp"]
 # las de apps instaladas y que el usuario tenga permiso de ver.
 lyra_ia_herramientas = ["lyra_ia.herramientas_crm.herramientas"]
 
+# Lo que Lyra puede HACER, no solo consultar (ver acciones.py). Nunca lo hace
+# sola: deja la propuesta y una persona dice si va o no.
+lyra_ia_acciones = ["lyra_ia.acciones_whatsapp.acciones"]
+
 # ---------------------------------------------------------------------------
 # Lyra se da cuenta (modulo Lyra Sense): mira lo que pasa, aplica las reglas de
 # omision, avisa en privado y arma las metricas por area. Ver sense/.

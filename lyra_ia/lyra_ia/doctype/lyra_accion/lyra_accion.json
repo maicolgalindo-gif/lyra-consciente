@@ -1,0 +1,143 @@
+{
+ "actions": [],
+ "creation": "2026-10-23 21:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-23 21:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Lyra IA",
+ "owner": "Administrator",
+ "autoname": "hash",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Lyra Accion",
+ "title_field": "accion",
+ "track_changes": 1,
+ "description": "Lo que Lyra propuso hacer y qué se decidió. Nada se hace sin que una persona diga que sí, y queda aquí para poder deshacerlo.",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Equipo Lyra",
+   "read": 1,
+   "report": 1
+  },
+  {
+   "role": "All",
+   "read": 1,
+   "if_owner": 1
+  }
+ ],
+ "fields": [
+  {
+   "fieldname": "accion",
+   "fieldtype": "Data",
+   "label": "Qué hace",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "resumen",
+   "fieldtype": "Small Text",
+   "label": "Lo que Lyra propuso",
+   "read_only": 1,
+   "in_list_view": 1,
+   "description": "Tal como se lo mostró a la persona antes de preguntarle."
+  },
+  {
+   "fieldname": "estado",
+   "fieldtype": "Select",
+   "label": "Estado",
+   "options": "Propuesta\nHecha\nRechazada\nDeshecha\nFalló",
+   "default": "Propuesta",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "label": "Quién decidió",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "conversacion",
+   "fieldtype": "Link",
+   "label": "En la conversación",
+   "options": "IA Conversacion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "propuesta_el",
+   "fieldtype": "Datetime",
+   "label": "Propuesta el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decidida_el",
+   "fieldtype": "Datetime",
+   "label": "Decidida el",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_datos",
+   "fieldtype": "Section Break",
+   "label": "Con qué datos"
+  },
+  {
+   "fieldname": "datos",
+   "fieldtype": "Code",
+   "label": "Datos",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_resultado",
+   "fieldtype": "Section Break",
+   "label": "Cómo salió"
+  },
+  {
+   "fieldname": "resultado",
+   "fieldtype": "Code",
+   "label": "Resultado",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error",
+   "read_only": 1,
+   "depends_on": "eval:doc.estado=='Falló'"
+  }
+ ],
+ "field_order": [
+  "accion",
+  "resumen",
+  "estado",
+  "column_break_1",
+  "usuario",
+  "conversacion",
+  "propuesta_el",
+  "decidida_el",
+  "sec_datos",
+  "datos",
+  "sec_resultado",
+  "resultado",
+  "error"
+ ]
+}
