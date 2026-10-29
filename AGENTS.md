@@ -6,6 +6,13 @@ nota hasta que ya pasó.
 
 Léelo antes del primer cambio.
 
+## Hacia dónde va
+
+`PLAN.md` tiene el plan completo en cuatro fases, con las palabras del dueño del
+producto. Si vas a construir algo nuevo, mira ahí en qué fase cae y qué incluye:
+varias cosas que suenan a una sola (una «plantilla por sector», por ejemplo) son
+en realidad cuatro.
+
 ## Las reglas que no se negocian
 
 No son preferencias de estilo. Son decisiones del producto, y varias se tomaron
